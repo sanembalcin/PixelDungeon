@@ -7,7 +7,7 @@
 class Player {
 protected:
     sf::Sprite sprite;
-    sf::Texture texture; // Derleyicinin aradığı ana texture değişkeni burada!
+    sf::Texture texture;
     float speed;
     int hp;
     int attack;
@@ -24,20 +24,6 @@ public:
 class Warrior : public Player {
 public:
     Warrior();
-    void update(DungeonMap& map) override;
-    void draw(sf::RenderWindow& window) override;
-};
-
-class Mage : public Player {
-private:
-    // Büyücüye özel 4 yön dokusu
-    sf::Texture texUp;
-    sf::Texture texDown;
-    sf::Texture texLeft;
-    sf::Texture texRight;
-
-public:
-    Mage();
     void update(DungeonMap& map) override;
     void draw(sf::RenderWindow& window) override;
 };
