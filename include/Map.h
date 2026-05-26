@@ -9,7 +9,6 @@ const int MAP_HEIGHT = 15;
 
 class DungeonMap {
 public:
-    
     int grid[MAP_HEIGHT][MAP_WIDTH];
     sf::RectangleShape wallTile;
     sf::RectangleShape floorTile;
@@ -17,6 +16,7 @@ public:
     DungeonMap();
     void initMap();
     void draw(sf::RenderWindow& window);
+    bool checkCollision(const sf::FloatRect& bounds) const;
 };
 
 #endif

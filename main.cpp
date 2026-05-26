@@ -10,7 +10,7 @@ int main() {
 
     DungeonMap map;
     Warrior player;
-    Enemy slime(400.f, 300.f); 
+    Enemy slime(160.f, 160.f);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -21,7 +21,7 @@ int main() {
 
         player.handleInput(map); 
         player.update(map);
-        slime.update(player.getPosition());
+        slime.update(player.getPosition(), map);
 
         window.clear();
         

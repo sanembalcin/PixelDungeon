@@ -51,3 +51,21 @@ void DungeonMap::draw(sf::RenderWindow& window) {
         }
     }
 }
+
+bool DungeonMap::checkCollision(const sf::FloatRect& bounds) const {
+    int startX = static_cast<int>(bounds.left / TILE_SIZE);
+    int endX = static_cast<int>((bounds.left + bounds.width) / TILE_SIZE);
+    int startY = static_cast<int>(bounds.top / TILE_SIZE);
+    int endY = static_cast<int>((bounds.top + bounds.height) / TILE_SIZE);
+
+    for (int y = startY; y <= endY; ++y) {
+        for (int x = startX; x <= endX; ++x) {
+            if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+                if (grid[y][x] == 1) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}

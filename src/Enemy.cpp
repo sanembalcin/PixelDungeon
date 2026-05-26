@@ -1,75 +1,104 @@
 #include "Enemy.h"
+#include "Map.h"
 #include <cmath>
-#include <cstdlib> // rand() fonksiyonu için
 
 Enemy::Enemy(float startX, float startY) {
-    // İnternetten bulduğun pikselli bir slime resmini assets'e "slime.png" olarak atabilirsin kanka
     if (!texture.loadFromFile("assets/slime.png")) {
-        // Eğer resim henüz yoksa geçici olarak ne yaptığımızı görelim diye hata vermesin
     }
-    
     sprite.setTexture(texture);
-    sprite.setScale(0.06f, 0.06f); // Karakterinle aynı ölçekte başlasın
+    sprite.setScale(0.06f, 0.06f);
     sprite.setPosition(startX, startY);
-    
-    speed = 1.5f; // Oyuncudan biraz daha yavaş olsun ki kaçabilelim
-    health = 3;   // Kılıçla 3 vuruşta ölsün
+    speed = 1.5f;
+    health = 3;
     isChasing = false;
-    changeBehaviorTime = 2.0f; // 2 saniyede bir rastgele yön değiştirsin
-    velocity = sf::Vector2f(0.f, 0.f);
 }
 
-void Enemy::update(const sf::Vector2f& playerPos) {
-    sf::Vector2f enemyPos = sprite.getPosition();
-    
-    // 1. OYUNCU İLE ARADAKİ MESAFEYİ ÖLÇ (Hipotenüs)
-    float dx = playerPos.x - enemyPos.x;
-    float dy = playerPos.y - enemyPos.y;
-    float distance = std::sqrt(dx * dx + dy * dy);
-    
-    // 2. YAPAY ZEKA KARAR MEKANİZMASI
-    if (distance < 150.f) {
-        // Oyuncu 150 piksel yakındaysa: KOVALAMA MODU (Chase)
-        isChasing = true;
-        
-        // Oyuncuya doğru giden yön vektörünü normalize ediyoruz
-        sf::Vector2f direction(dx / distance, dy / distance);
-        velocity = direction * speed;
-    } 
-    else {
-        // Oyuncu uzaktaysa: DEVRİYE MODU (Patrol - Rastgele Gezinme)
-        if (isChasing) {
-            // Kovalamadan yeni çıkmışsa hızı bi sıfırla
-            isChasing = false;
-            behaviorClock.restart();
+std::vector<sf::Vector2i> Enemy::findPath(const sf::Vector2i& start, const sf::Vector2i& target, const DungeonMap& map) {
+    std::vector<sf::Vector2i> path;
+    if (start == target) return path;
+
+    std::queue<sf::Vector2i> q;
+    std::vector<std::vector<bool>> visited(MAP_HEIGHT, std::vector<bool>(MAP_WIDTH, false));
+    std::vector<std::vector<sf::Vector2i>> parent(MAP_HEIGHT, std::vector<sf::Vector2i>(MAP_WIDTH, sf::Vector2i(-1, -1)));
+
+    q.push(start);
+    visited[start.y][start.x] = true;
+
+    int dirX[] = { 0, 0, -1, 1 };
+    int dirY[] = { -1, 1, 0, 0 };
+    bool found = false;
+
+    while (!q.empty()) {
+        sf::Vector2i curr = q.front();
+        q.pop();
+
+        if (curr == target) {
+            found = true;
+            break;
         }
-        
-        // 2 saniyede bir kafasına göre yön seçsin
-        if (behaviorClock.getElapsedTime().asSeconds() >= changeBehaviorTime) {
-            int randomDir = std::rand() % 5; // 0:Dur, 1:Yukarı, 2:Aşağı, 3:Sola, 4:Sağa
-            
-            if (randomDir == 0)      velocity = sf::Vector2f(0.f, 0.f);
-            else if (randomDir == 1) velocity = sf::Vector2f(0.f, -speed);
-            else if (randomDir == 2) velocity = sf::Vector2f(0.f, speed);
-            else if (randomDir == 3) velocity = sf::Vector2f(-speed, 0.f);
-            else if (randomDir == 4) velocity = sf::Vector2f(speed, 0.f);
-            
-            behaviorClock.restart();
+
+        for (int i = 0; i < 4; ++i) {
+            int nextX = curr.x + dirX[i];
+            int nextY = curr.y + dirY[i];
+
+            if (nextX >= 0 && nextX < MAP_WIDTH && nextY >= 0 && nextY < MAP_HEIGHT) {
+                if (!visited[nextY][nextX] && map.grid[nextY][nextX] != 1) {
+                    visited[nextY][nextX] = true;
+                    parent[nextY][nextX] = curr;
+                    q.push(sf::Vector2i(nextX, nextY));
+                }
+            }
         }
     }
+
+    if (found) {
+        sf::Vector2i curr = target;
+        while (curr != start) {
+            path.push_back(curr);
+            curr = parent[curr.y][curr.x];
+        }
+    }
+    return path;
+}
+
+void Enemy::update(const sf::Vector2f& playerPos, const DungeonMap& map) {
+    sf::Vector2f enemyPos = sprite.getPosition();
     
-    // Canavarı hareket ettir (İleride buraya harita duvar çarpışması da eklenecek)
-    sprite.move(velocity);
+    sf::Vector2i enemyTile(static_cast<int>((enemyPos.x + 10.f) / TILE_SIZE), static_cast<int>((enemyPos.y + 10.f) / TILE_SIZE));
+    sf::Vector2i playerTile(static_cast<int>((playerPos.x + 10.f) / TILE_SIZE), static_cast<int>((playerPos.y + 10.f) / TILE_SIZE));
+
+    float distance = std::sqrt(std::pow(playerPos.x - enemyPos.x, 2) + std::pow(playerPos.y - enemyPos.y, 2));
+
+    if (distance < 400.f) {
+        std::vector<sf::Vector2i> path = findPath(enemyTile, playerTile, map);
+
+        if (!path.empty()) {
+            sf::Vector2i nextTile = path.back(); 
+            sf::Vector2f targetPos(nextTile.x * TILE_SIZE + 4.f, nextTile.y * TILE_SIZE + 4.f);
+
+            sf::Vector2f direction = targetPos - enemyPos;
+            float dirLength = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+
+            if (dirLength > 2.f) {
+                direction /= dirLength;
+                sprite.move(direction * speed);
+            }
+        }
+    }
+}
+
+void Enemy::draw(sf::RenderWindow& window) {
+    window.draw(sprite);
+}
+
+sf::FloatRect Enemy::getBounds() const {
+    return sprite.getGlobalBounds();
 }
 
 void Enemy::takeDamage(int amount) {
     health -= amount;
 }
 
-void Enemy::draw(sf::RenderWindow& window) {
-    // Slime'ı ekrana çiziyoruz, eğer resmi yoksa geçici olarak yeşil boyayabilirsin
-    if (texture.getNativeHandle() == 0) {
-        sprite.setColor(sf::Color::Green);
-    }
-    window.draw(sprite);
+int Enemy::getHealth() const {
+    return health;
 }
