@@ -22,12 +22,24 @@ int main() {
         player.handleInput(map); 
         player.update(map);
         slime.update(player.getPosition(), map);
+        if (player.getBounds().intersects(slime.getBounds())) {
+            player.takeDamage(15);
+    
+            sf::Vector2f pushDirection = player.getPosition() - slime.getPosition();
+            float length = std::sqrt(pushDirection.x * pushDirection.x + pushDirection.y * pushDirection.y);
+    
+            if (length != 0) {
+                pushDirection /= length;
+                player.move(pushDirection.x * 15.f, pushDirection.y * 15.f);
+    }
+}
 
         window.clear();
         
         map.draw(window);
         slime.draw(window);
         player.draw(window);
+        player.drawHealthBar(window);
         
         window.display();
     }

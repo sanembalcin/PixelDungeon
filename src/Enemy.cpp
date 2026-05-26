@@ -102,3 +102,7 @@ void Enemy::takeDamage(int amount) {
 int Enemy::getHealth() const {
     return health;
 }
+
+sf::Vector2f Enemy::getPosition() const {
+    return sprite.getPosition();
+}

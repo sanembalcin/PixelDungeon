@@ -2,38 +2,55 @@
 #define PLAYER_H
 
 #include <SFML/Graphics.hpp>
+#include "Map.h"
 
-enum class Direction { UP, DOWN, LEFT, RIGHT };
+enum Direction { UP, DOWN, LEFT, RIGHT };
 
 class Player {
 protected:
     sf::Sprite sprite;
-    sf::Texture texUp, texDown, texLeft, texRight;
-    Direction currentDir;
+    sf::Texture texture;
+    float speed;
+    int maxHealth;
+    int health;
+    sf::Clock damageClock;
+    float damageCooldown;
 
 public:
     Player();
-    virtual ~Player() = default;
-    virtual void handleInput(const class DungeonMap& map) = 0; 
-    virtual void update(const class DungeonMap& map) = 0;
-    virtual void draw(sf::RenderWindow& window) = 0;
-    sf::Vector2f getPosition() const { return sprite.getPosition(); }
+    void handleInput();
+    void update(const class DungeonMap& map);
+    void draw(sf::RenderWindow& window);
+    sf::Vector2f getPosition() const;
+    sf::FloatRect getBounds() const;
+    void takeDamage(int amount);
+    int getHealth() const;
+    int getMaxHealth() const;
+    void drawHealthBar(sf::RenderWindow& window);
+    void move(float offsetX, float offsetY);
 };
 
 class Warrior : public Player {
 private:
-    
-    sf::Texture atkUp, atkDown, atkLeft, atkRight;
-    
+    sf::Texture texUp;
+    sf::Texture texDown;
+    sf::Texture texLeft;
+    sf::Texture texRight;
+    sf::Texture atkUp;
+    sf::Texture atkDown;
+    sf::Texture atkLeft;
+    sf::Texture atkRight;
     bool isAttacking;
-    sf::Clock attackClock;       
-    float attackDuration;        
+    float attackDuration;
+    sf::Clock attackClock;
+    Direction currentDir;
 
 public:
     Warrior();
-    void handleInput(const class DungeonMap& map) override;
-    void update(const class DungeonMap& map) override;
-    void draw(sf::RenderWindow& window) override;
+    void handleInput(const DungeonMap& map);
+    void update(const DungeonMap& map);
+    void draw(sf::RenderWindow& window);
+
 };
 
 #endif

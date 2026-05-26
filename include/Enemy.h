@@ -24,6 +24,7 @@ public:
     sf::FloatRect getBounds() const;
     void takeDamage(int amount);
     int getHealth() const;
+    sf::Vector2f getPosition() const;
 };
 
 #endif
