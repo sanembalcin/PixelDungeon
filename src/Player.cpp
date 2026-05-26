@@ -28,34 +28,83 @@ Warrior::Warrior() : Player() {
 }
 
 void Warrior::handleInput(const DungeonMap& map) {
-    // KİLİTLENMEYİ ÖNLEYEN EN KRİTİK DEĞİŞİKLİK: 
-    // Saldırı yaparken bile WASD tuşları çalışmaya devam edecek, girdi engellenmeyecek!
+    float moveSpeed = 4.f;
     
+    // Karakterin mevcut konumunu ve sınırlarını alıyoruz
+    sf::Vector2f pos = sprite.getPosition();
+    
+    // SFML sprite'ının genişlik ve yüksekliğini alıyoruz (Çarpışmayı tam köşelerden hesaplamak için)
+    float playerWidth = sprite.getGlobalBounds().width;
+    float playerHeight = sprite.getGlobalBounds().height;
+
+    // 1. YUKARI HAREKET (W)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-        sprite.move(0.f, -4.f);
         currentDir = Direction::UP;
         if (!isAttacking) sprite.setTexture(texUp);
+        
+        // Karakterin bir sonraki adımda olacağı üst kenar pikselleri
+        float nextY = pos.y - moveSpeed;
+        
+        // Pikselleri TILE_SIZE'a (40) bölerek matris indekslerini buluyoruz
+        int tileTop = static_cast<int>(nextY / TILE_SIZE);
+        int tileLeft = static_cast<int>(pos.x / TILE_SIZE);
+        int tileRight = static_cast<int>((pos.x + playerWidth) / TILE_SIZE);
+        
+        // Eğer haritada gideceğimiz yerler duvar (1) değilse hareket et
+        if (map.grid[tileTop][tileLeft] != 1 && map.grid[tileTop][tileRight] != 1) {
+            sprite.move(0.f, -moveSpeed);
+        }
     }
+    // 2. AŞAĞI HAREKET (S)
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-        sprite.move(0.f, 4.f);
         currentDir = Direction::DOWN;
         if (!isAttacking) sprite.setTexture(texDown);
+        
+        float nextY = pos.y + playerHeight + moveSpeed;
+        
+        int tileBottom = static_cast<int>(nextY / TILE_SIZE);
+        int tileLeft = static_cast<int>(pos.x / TILE_SIZE);
+        int tileRight = static_cast<int>((pos.x + playerWidth) / TILE_SIZE);
+        
+        if (map.grid[tileBottom][tileLeft] != 1 && map.grid[tileBottom][tileRight] != 1) {
+            sprite.move(0.f, moveSpeed);
+        }
     }
+    // 3. SOLA HAREKET (A)
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        sprite.move(-4.f, 0.f);
         currentDir = Direction::LEFT;
         if (!isAttacking) sprite.setTexture(texLeft);
+        
+        float nextX = pos.x - moveSpeed;
+        
+        int tileLeft = static_cast<int>(nextX / TILE_SIZE);
+        int tileTop = static_cast<int>(pos.y / TILE_SIZE);
+        int tileBottom = static_cast<int>((pos.y + playerHeight) / TILE_SIZE);
+        
+        if (map.grid[tileTop][tileLeft] != 1 && map.grid[tileBottom][tileLeft] != 1) {
+            sprite.move(-moveSpeed, 0.f);
+        }
     }
+    // 4. SAĞA HAREKET (D)
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        sprite.move(4.f, 0.f);
         currentDir = Direction::RIGHT;
         if (!isAttacking) sprite.setTexture(texRight);
+        
+        float nextX = pos.x + playerWidth + moveSpeed;
+        
+        int tileRight = static_cast<int>(nextX / TILE_SIZE);
+        int tileTop = static_cast<int>(pos.y / TILE_SIZE);
+        int tileBottom = static_cast<int>((pos.y + playerHeight) / TILE_SIZE);
+        
+        if (map.grid[tileTop][tileRight] != 1 && map.grid[tileBottom][tileRight] != 1) {
+            sprite.move(moveSpeed, 0.f);
+        }
     }
 
-    // Space'e basınca eğer zaten saldırmıyorsak saldırıyı başlatıyoruz
+    // Space kontrolü (Saldırı tetikleyici)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !isAttacking) {
         isAttacking = true;
-        attackClock.restart(); // Saati sıfırdan başlatıyoruz
+        attackClock.restart(); // Saati sıfırdan başlatıyoruz (Karakter 0.2 saniye salgırıda kalacak)
 
         // Baktığı yöne göre senin o harika kılıç efektli resmini giydiriyoruz
         switch (currentDir) {
@@ -70,13 +119,11 @@ void Warrior::handleInput(const DungeonMap& map) {
 }
 
 void Warrior::update(const DungeonMap& map) {
-    // Eğer karakter o an saldırıyorsa, zamanlayıcıyı sürekli kontrol et
     if (isAttacking) {
-        // Belirlediğimiz süre (0.2 saniye) dolduysa saldırı animasyonunu bitir
+        // 0.2 saniyelik saldırı süresi dolduysa normal yürüyüş spritelarına geri dön
         if (attackClock.getElapsedTime().asSeconds() >= attackDuration) {
             isAttacking = false;
             
-            // Saldırı bittiği için karakteri durduğu yöndeki normal yürüme resmine geri döndür
             switch (currentDir) {
                 case Direction::UP:    sprite.setTexture(texUp); break;
                 case Direction::DOWN:  sprite.setTexture(texDown); break;
