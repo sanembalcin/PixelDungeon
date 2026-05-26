@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include "Map.h"
 #include "Player.h"
+#include "Enemy.h"
 #include <iostream>
 
 int main() {
@@ -8,8 +9,8 @@ int main() {
     window.setFramerateLimit(60);
 
     DungeonMap map;
-    
-    Warrior player; 
+    Warrior player;
+    Enemy slime(400.f, 300.f); 
 
     while (window.isOpen()) {
         sf::Event event;
@@ -18,16 +19,16 @@ int main() {
                 window.close();
         }
 
-        // 1. GİRDİLERİ KONTROL ET (Eksik olan ve WASD'yi çalıştıracak satır bu!)
         player.handleInput(map); 
-
-        // 2. MANTIKSAL GÜNCELLEMELERİ YAP
         player.update(map);
+        slime.update(player.getPosition());
 
-        // 3. EKRANA ÇİZME İŞLEMLERİ
         window.clear();
+        
         map.draw(window);
+        slime.draw(window);
         player.draw(window);
+        
         window.display();
     }
     return 0;

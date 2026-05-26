@@ -22,12 +22,12 @@ public:
 
 class Warrior : public Player {
 private:
-    // Yeni Saldırı Dokuları
+    
     sf::Texture atkUp, atkDown, atkLeft, atkRight;
     
     bool isAttacking;
-    sf::Clock attackClock;       // Saldırı anından itibaren geçen süreyi ölçecek
-    float attackDuration;        // Saldırı resminin ekranda kalacağı süre (Saniye)
+    sf::Clock attackClock;       
+    float attackDuration;        
 
 public:
     Warrior();
