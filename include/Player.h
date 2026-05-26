@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "Map.h"
+#include <string>
 
 class Player {
 protected:
@@ -11,6 +12,11 @@ protected:
     float speed;
     int hp;
     int attack;
+
+    // ⚔️ DERLEYİCİNİN BULAMADIĞI SİHİRLİ DEĞİŞKENLER BURADA OLMAK ZORUNDA:
+    bool isAttacking;
+    sf::Clock attackClock;       
+    std::string lastDirection;   
 
 public:
     Player();
