@@ -8,7 +8,7 @@ int main() {
     window.setFramerateLimit(60);
 
     DungeonMap map;
-    // Seçim mekanizması yok, doğrudan Savaşçı nesnesi üretiliyor kanka
+    
     Warrior player; 
 
     while (window.isOpen()) {
@@ -18,13 +18,17 @@ int main() {
                 window.close();
         }
 
+        // 1. GİRDİLERİ KONTROL ET (Eksik olan ve WASD'yi çalıştıracak satır bu!)
+        player.handleInput(map); 
+
+        // 2. MANTIKSAL GÜNCELLEMELERİ YAP
         player.update(map);
 
+        // 3. EKRANA ÇİZME İŞLEMLERİ
         window.clear();
         map.draw(window);
         player.draw(window);
         window.display();
     }
-
     return 0;
 }

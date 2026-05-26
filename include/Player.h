@@ -2,35 +2,37 @@
 #define PLAYER_H
 
 #include <SFML/Graphics.hpp>
-#include "Map.h"
-#include <string>
+
+enum class Direction { UP, DOWN, LEFT, RIGHT };
 
 class Player {
 protected:
     sf::Sprite sprite;
-    sf::Texture texture;
-    float speed;
-    int hp;
-    int attack;
-
-    // ⚔️ DERLEYİCİNİN BULAMADIĞI SİHİRLİ DEĞİŞKENLER BURADA OLMAK ZORUNDA:
-    bool isAttacking;
-    sf::Clock attackClock;       
-    std::string lastDirection;   
+    sf::Texture texUp, texDown, texLeft, texRight;
+    Direction currentDir;
 
 public:
     Player();
+    virtual ~Player() = default;
+    virtual void handleInput(const class DungeonMap& map) = 0; 
+    virtual void update(const class DungeonMap& map) = 0;
+    virtual void draw(sf::RenderWindow& window) = 0;
     sf::Vector2f getPosition() const { return sprite.getPosition(); }
-    int getHp() const { return hp; }
-
-    virtual void update(DungeonMap& map);
-    virtual void draw(sf::RenderWindow& window);
 };
 
 class Warrior : public Player {
+private:
+    // Yeni Saldırı Dokuları
+    sf::Texture atkUp, atkDown, atkLeft, atkRight;
+    
+    bool isAttacking;
+    sf::Clock attackClock;       // Saldırı anından itibaren geçen süreyi ölçecek
+    float attackDuration;        // Saldırı resminin ekranda kalacağı süre (Saniye)
+
 public:
     Warrior();
-    void update(DungeonMap& map) override;
+    void handleInput(const class DungeonMap& map) override;
+    void update(const class DungeonMap& map) override;
     void draw(sf::RenderWindow& window) override;
 };
 

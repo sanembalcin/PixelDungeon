@@ -1,144 +1,95 @@
 #include "Player.h"
-#include <iostream>
+#include "Map.h"
 
 Player::Player() {
-    speed = 2.0f;
-    hp = 100;
-    attack = 10;
-    isAttacking = false;
-    lastDirection = "S"; 
+    currentDir = Direction::DOWN;
 }
 
-void Player::update(DungeonMap& map) {}
-void Player::draw(sf::RenderWindow& window) {}
+Warrior::Warrior() : Player() {
+    // 1. Normal Yürüyüş Resimlerini Yükle
+    texUp.loadFromFile("assets/warrior_up.png");
+    texDown.loadFromFile("assets/warrior_down.png");
+    texLeft.loadFromFile("assets/warrior_left.png");
+    texRight.loadFromFile("assets/warrior_right.png");
 
-// ==========================================
-// WARRIOR (Savaşçı Sınıfı Fonksiyonları)
-// ==========================================
-Warrior::Warrior() {
-    speed = 2.5f;
-    hp = 150;
-    attack = 15;
+    // 2. Senin Attığın Yeni Saldırı Resimlerini Yükle
+    atkUp.loadFromFile("assets/warrior_attack_up.png");
+    atkDown.loadFromFile("assets/warrior_attack_down.png");
+    atkLeft.loadFromFile("assets/warrior_attack_left.png");
+    atkRight.loadFromFile("assets/warrior_attack_right.png");
+
+    // İlk başlangıç ayarları
+    sprite.setTexture(texDown);
+    sprite.setScale(0.06f, 0.06f);
+    sprite.setPosition(200.f, 250.f); // Güvenli, geniş koridor bölgesi
+    
     isAttacking = false;
-    lastDirection = "S"; 
-    sprite.setPosition(60.0f, 60.0f);
-
-    if (texture.loadFromFile("assets/warrior_down.png")) {
-        sprite.setTexture(texture);
-        sprite.setScale(0.06f, 0.06f); 
-    } else {
-        std::cout << "[HATA] assets/warrior_down.png yuklenemedi!" << std::endl;
-    }
+    attackDuration = 0.20f; // Saldırı efekti ekranda 0.2 saniye (200 milisaniye) kalacak
 }
 
-void Warrior::update(DungeonMap& map) {
-    // Saldırı yapılıyorsa yön tuşlarını kilitle kanka
-    if (isAttacking) {
-        if (attackClock.getElapsedTime().asSeconds() > 0.12f) {
-            isAttacking = false;
-            sprite.setColor(sf::Color::White); // Rengi normale döndür
-        }
-        return; 
-    }
-
-    sf::Vector2f nextPos = sprite.getPosition();
-    bool hareketVar = false;
-
+void Warrior::handleInput(const DungeonMap& map) {
+    // KİLİTLENMEYİ ÖNLEYEN EN KRİTİK DEĞİŞİKLİK: 
+    // Saldırı yaparken bile WASD tuşları çalışmaya devam edecek, girdi engellenmeyecek!
+    
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-        nextPos.y -= speed;
-        if (texture.loadFromFile("assets/warrior_up.png")) sprite.setTexture(texture);
-        lastDirection = "W";
-        hareketVar = true;
+        sprite.move(0.f, -4.f);
+        currentDir = Direction::UP;
+        if (!isAttacking) sprite.setTexture(texUp);
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-        nextPos.y += speed;
-        if (texture.loadFromFile("assets/warrior_down.png")) sprite.setTexture(texture);
-        lastDirection = "S";
-        hareketVar = true;
+        sprite.move(0.f, 4.f);
+        currentDir = Direction::DOWN;
+        if (!isAttacking) sprite.setTexture(texDown);
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        nextPos.x -= speed;
-        if (texture.loadFromFile("assets/warrior_left.png")) sprite.setTexture(texture);
-        lastDirection = "A";
-        hareketVar = true;
+        sprite.move(-4.f, 0.f);
+        currentDir = Direction::LEFT;
+        if (!isAttacking) sprite.setTexture(texLeft);
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        nextPos.x += speed;
-        if (texture.loadFromFile("assets/warrior_right.png")) sprite.setTexture(texture);
-        lastDirection = "D";
-        hareketVar = true;
+        sprite.move(4.f, 0.f);
+        currentDir = Direction::RIGHT;
+        if (!isAttacking) sprite.setTexture(texRight);
     }
 
-    // Space tuşuna basınca saldırıyı başlat kanka
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+    // Space'e basınca eğer zaten saldırmıyorsak saldırıyı başlatıyoruz
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !isAttacking) {
         isAttacking = true;
-        attackClock.restart();
-        sprite.setColor(sf::Color(255, 100, 100, 230)); // Vuruş hissi için kırmızı yap
-    }
+        attackClock.restart(); // Saati sıfırdan başlatıyoruz
 
-    if (hareketVar) {
-        float width = sprite.getGlobalBounds().width;
-        float height = sprite.getGlobalBounds().height;
-
-        // 🎯 Ofset sayılarını (6 ve 10 gibi) büyüterek kontrol kutusunu karakterin merkezine yaklaştırdık.
-        // Böylece karakter dar koridorlardan geçerken pürüzsüzce kayacak kanka.
-        int leftTile   = static_cast<int>((nextPos.x + 6) / TILE_SIZE);
-        int rightTile  = static_cast<int>((nextPos.x + width - 6) / TILE_SIZE);
-        int topTile    = static_cast<int>((nextPos.y + 10) / TILE_SIZE);
-        int bottomTile = static_cast<int>((nextPos.y + height - 2) / TILE_SIZE);
-
-        bool collision = false;
-
-        if (leftTile < 0 || rightTile >= MAP_WIDTH || topTile < 0 || bottomTile >= MAP_HEIGHT) {
-            collision = true;
-        } else {
-            if (map.grid[topTile][leftTile] == 1 ||
-                map.grid[topTile][rightTile] == 1 ||
-                map.grid[bottomTile][leftTile] == 1 ||
-                map.grid[bottomTile][rightTile] == 1) {
-                collision = true;
-            }
+        // Baktığı yöne göre senin o harika kılıç efektli resmini giydiriyoruz
+        switch (currentDir) {
+            case Direction::UP:    sprite.setTexture(atkUp); break;
+            case Direction::DOWN:  sprite.setTexture(atkDown); break;
+            case Direction::LEFT:  sprite.setTexture(atkLeft); break;
+            case Direction::RIGHT: sprite.setTexture(atkRight); break;
         }
+        // Yeni resim yüklenince boyutun bozulmaması için senin 0.06f ölçeğini sabitliyoruz
+        sprite.setScale(0.06f, 0.06f);
+    }
+}
 
-        if (!collision) {
-            sprite.setPosition(nextPos);
+void Warrior::update(const DungeonMap& map) {
+    // Eğer karakter o an saldırıyorsa, zamanlayıcıyı sürekli kontrol et
+    if (isAttacking) {
+        // Belirlediğimiz süre (0.2 saniye) dolduysa saldırı animasyonunu bitir
+        if (attackClock.getElapsedTime().asSeconds() >= attackDuration) {
+            isAttacking = false;
+            
+            // Saldırı bittiği için karakteri durduğu yöndeki normal yürüme resmine geri döndür
+            switch (currentDir) {
+                case Direction::UP:    sprite.setTexture(texUp); break;
+                case Direction::DOWN:  sprite.setTexture(texDown); break;
+                case Direction::LEFT:  sprite.setTexture(texLeft); break;
+                case Direction::RIGHT: sprite.setTexture(texRight); break;
+            }
+            sprite.setScale(0.06f, 0.06f);
         }
     }
 }
 
 void Warrior::draw(sf::RenderWindow& window) {
+    // O yapay düz mavi çizgiyi (slashLine) tamamen tarihe gömdük kanka!
+    // Karakteri kırmızıya boyamayı da kaldırdık, çünkü artık kendi orijinal saldırı resmi çiziliyor.
     window.draw(sprite);
-
-    // Eğer saldırı aktifse çizgiyi ekrana bas kanka
-    if (isAttacking) {
-        sf::Vector2f pPos = sprite.getPosition();
-        // Karakterimizin tam merkez noktasını buluyoruz
-        float cX = pPos.x + 15.0f;
-        float cY = pPos.y + 15.0f;
-
-        // Çizgiyi 25 piksel yerine 18 piksel yaparak biraz kısalttık kanka
-        sf::RectangleShape slashLine(sf::Vector2f(18.0f, 4.0f));
-        slashLine.setFillColor(sf::Color(200, 230, 255, 200)); 
-        slashLine.setOrigin(0.0f, 2.0f); 
-
-        // 🎯 Düzelttik: Ofsetleri 15'ten 5'e indirdik. Çizgi artık duvara taşmayacak!
-        if (lastDirection == "W") {
-            slashLine.setPosition(cX, cY - 5.0f);
-            slashLine.setRotation(270.0f);
-        }
-        else if (lastDirection == "S") {
-            slashLine.setPosition(cX, cY + 5.0f);
-            slashLine.setRotation(90.0f);
-        }
-        else if (lastDirection == "A") {
-            slashLine.setPosition(cX - 5.0f, cY);
-            slashLine.setRotation(180.0f);
-        }
-        else if (lastDirection == "D") {
-            slashLine.setPosition(cX + 5.0f, cY);
-            slashLine.setRotation(0.0f);
-        }
-
-        window.draw(slashLine);
-    }
 }
