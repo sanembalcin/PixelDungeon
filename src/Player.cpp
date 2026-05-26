@@ -73,51 +73,63 @@ Warrior::Warrior() : Player() {
 void Warrior::handleInput(const DungeonMap& map) {
     float moveSpeed = 4.f;
     sf::Vector2f pos = sprite.getPosition();
-    float playerWidth = sprite.getGlobalBounds().width;
-    float playerHeight = sprite.getGlobalBounds().height;
+    
+    float boxW = 10.f;
+    float boxH = 10.f;
+    float offsetX = 11.f;
+    float offsetY = 16.f;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
         currentDir = Direction::UP;
         if (!isAttacking) sprite.setTexture(texUp);
         float nextY = pos.y - moveSpeed;
-        int tileTop = static_cast<int>(nextY / TILE_SIZE);
-        int tileLeft = static_cast<int>(pos.x / TILE_SIZE);
-        int tileRight = static_cast<int>((pos.x + playerWidth) / TILE_SIZE);
-        if (map.grid[tileTop][tileLeft] != 1 && map.grid[tileTop][tileRight] != 1) {
-            sprite.move(0.f, -moveSpeed);
+        if (nextY >= 0.f) {
+            int tileTop = static_cast<int>((nextY + offsetY) / TILE_SIZE);
+            int tileLeft = static_cast<int>((pos.x + offsetX) / TILE_SIZE);
+            int tileRight = static_cast<int>((pos.x + offsetX + boxW) / TILE_SIZE);
+            if (map.grid[tileTop][tileLeft] != 1 && map.grid[tileTop][tileRight] != 1) {
+                
+                sprite.move(0.f, -moveSpeed);
+            }
         }
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
         currentDir = Direction::DOWN;
         if (!isAttacking) sprite.setTexture(texDown);
-        float nextY = pos.y + playerHeight + moveSpeed;
-        int tileBottom = static_cast<int>(nextY / TILE_SIZE);
-        int tileLeft = static_cast<int>(pos.x / TILE_SIZE);
-        int tileRight = static_cast<int>((pos.x + playerWidth) / TILE_SIZE);
-        if (map.grid[tileBottom][tileLeft] != 1 && map.grid[tileBottom][tileRight] != 1) {
-            sprite.move(0.f, moveSpeed);
+        float nextY = pos.y + moveSpeed;
+        if (nextY < MAP_HEIGHT * TILE_SIZE) {
+            int tileBottom = static_cast<int>((nextY + offsetY + boxH) / TILE_SIZE);
+            int tileLeft = static_cast<int>((pos.x + offsetX) / TILE_SIZE);
+            int tileRight = static_cast<int>((pos.x + offsetX + boxW) / TILE_SIZE);
+            if (map.grid[tileBottom][tileLeft] != 1 && map.grid[tileBottom][tileRight] != 1) {
+                sprite.move(0.f, moveSpeed);
+            }
         }
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
         currentDir = Direction::LEFT;
         if (!isAttacking) sprite.setTexture(texLeft);
         float nextX = pos.x - moveSpeed;
-        int tileLeft = static_cast<int>(nextX / TILE_SIZE);
-        int tileTop = static_cast<int>(pos.y / TILE_SIZE);
-        int tileBottom = static_cast<int>((pos.y + playerHeight) / TILE_SIZE);
-        if (map.grid[tileTop][tileLeft] != 1 && map.grid[tileBottom][tileLeft] != 1) {
-            sprite.move(-moveSpeed, 0.f);
+        if (nextX >= 0.f) {
+            int tileLeft = static_cast<int>((nextX + offsetX) / TILE_SIZE);
+            int tileTop = static_cast<int>((pos.y + offsetY) / TILE_SIZE);
+            int tileBottom = static_cast<int>((pos.y + offsetY + boxH) / TILE_SIZE);
+            if (map.grid[tileTop][tileLeft] != 1 && map.grid[tileBottom][tileLeft] != 1) {
+                sprite.move(-moveSpeed, 0.f);
+            }
         }
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
         currentDir = Direction::RIGHT;
         if (!isAttacking) sprite.setTexture(texRight);
-        float nextX = pos.x + playerWidth + moveSpeed;
-        int tileRight = static_cast<int>(nextX / TILE_SIZE);
-        int tileTop = static_cast<int>(pos.y / TILE_SIZE);
-        int tileBottom = static_cast<int>((pos.y + playerHeight) / TILE_SIZE);
-        if (map.grid[tileTop][tileRight] != 1 && map.grid[tileBottom][tileRight] != 1) {
-            sprite.move(moveSpeed, 0.f);
+        float nextX = pos.x + moveSpeed;
+        if (nextX < MAP_WIDTH * TILE_SIZE) {
+            int tileRight = static_cast<int>((nextX + offsetX + boxW) / TILE_SIZE);
+            int tileTop = static_cast<int>((pos.y + offsetY) / TILE_SIZE);
+            int tileBottom = static_cast<int>((pos.y + offsetY + boxH) / TILE_SIZE);
+            if (map.grid[tileTop][tileRight] != 1 && map.grid[tileBottom][tileRight] != 1) {
+                sprite.move(moveSpeed, 0.f);
+            }
         }
     }
 
@@ -136,18 +148,35 @@ void Warrior::handleInput(const DungeonMap& map) {
 
 void Warrior::update(const DungeonMap& map) {
     handleInput(map);
+
     if (isAttacking) {
         if (attackClock.getElapsedTime().asSeconds() >= attackDuration) {
             isAttacking = false;
             switch (currentDir) {
-                case Direction::UP:    sprite.setTexture(texUp); break;
-                case Direction::DOWN:  sprite.setTexture(texDown); break;
-                case Direction::LEFT:  sprite.setTexture(texLeft); break;
-                case Direction::RIGHT: sprite.setTexture(texRight); break;
+            case Direction::UP: sprite.setTexture(texUp); break;
+            case Direction::DOWN: sprite.setTexture(texDown); break;
+            case Direction::LEFT: sprite.setTexture(texLeft); break;
+            case Direction::RIGHT: sprite.setTexture(texRight); break;
             }
             sprite.setScale(0.06f, 0.06f);
         }
     }
+
+    sf::Vector2f pos = sprite.getPosition();
+    float w = sprite.getGlobalBounds().width;
+    float h = sprite.getGlobalBounds().height;
+
+    float minX = 0.f;
+    float minY = 0.f;
+    float maxX = static_cast<float>(MAP_WIDTH * TILE_SIZE) - w;
+    float maxY = static_cast<float>(MAP_HEIGHT * TILE_SIZE) - h;
+
+    if (pos.x < minX) pos.x = minX;
+    if (pos.x > maxX) pos.x = maxX;
+    if (pos.y < minY) pos.y = minY;
+    if (pos.y > maxY) pos.y = maxY;
+
+    sprite.setPosition(pos);
 }
 
 void Warrior::draw(sf::RenderWindow& window) {
@@ -172,4 +201,16 @@ void Player::drawHealthBar(sf::RenderWindow& window) {
 
 void Player::move(float offsetX, float offsetY) {
     sprite.move(offsetX, offsetY);
+}
+
+bool Player::getIsAttacking() const {
+    return false;
+}
+
+bool Warrior::getIsAttacking() const {
+    return isAttacking;
+}
+
+void Player::setPosition(float x, float y) {
+    sprite.setPosition(x, y);
 }

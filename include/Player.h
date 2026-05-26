@@ -28,6 +28,8 @@ public:
     int getMaxHealth() const;
     void drawHealthBar(sf::RenderWindow& window);
     void move(float offsetX, float offsetY);
+    virtual bool getIsAttacking() const;
+    void setPosition(float x, float y);
 };
 
 class Warrior : public Player {
@@ -50,7 +52,7 @@ public:
     void handleInput(const DungeonMap& map);
     void update(const DungeonMap& map);
     void draw(sf::RenderWindow& window);
-
+    bool getIsAttacking() const override;
 };
 
 #endif

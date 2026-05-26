@@ -2,10 +2,8 @@
 #define ENEMY_H
 
 #include <SFML/Graphics.hpp>
+#include "Map.h"
 #include <vector>
-#include <queue>
-
-class DungeonMap;
 
 class Enemy {
 private:
@@ -13,18 +11,19 @@ private:
     sf::Texture texture;
     float speed;
     int health;
-    bool isChasing;
-
-    std::vector<sf::Vector2i> findPath(const sf::Vector2i& start, const sf::Vector2i& target, const DungeonMap& map);
+    std::vector<sf::Vector2i> path;
 
 public:
-    Enemy(float startX, float startY);
+    Enemy(float x, float y);
     void update(const sf::Vector2f& playerPos, const DungeonMap& map);
     void draw(sf::RenderWindow& window);
+    sf::Vector2f getPosition() const;
     sf::FloatRect getBounds() const;
     void takeDamage(int amount);
+    bool isDead() const;
+    void setPosition(float x, float y);
     int getHealth() const;
-    sf::Vector2f getPosition() const;
+    std::vector<sf::Vector2i> findPath(const sf::Vector2i& start, const sf::Vector2i& target, const DungeonMap& map);
 };
 
 #endif
