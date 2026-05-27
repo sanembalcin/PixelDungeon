@@ -156,15 +156,29 @@ void DungeonMap::createCorridor(sf::IntRect roomA, sf::IntRect roomB) {
     }
 }
 
-void DungeonMap::draw(sf::RenderWindow& window) {
+void DungeonMap::draw(sf::RenderWindow& window, const sf::Vector2f& playerPos) {
+    float viewRadius = 5.f * TILE_SIZE;
+
     for (int y = 0; y < MAP_HEIGHT; ++y) {
         for (int x = 0; x < MAP_WIDTH; ++x) {
-            if (grid[y][x] == 1) {
-                wallTile.setPosition(x * TILE_SIZE, y * TILE_SIZE);
-                window.draw(wallTile);
+            sf::Vector2f tilePos(x * TILE_SIZE, y * TILE_SIZE);
+            
+            float distance = std::sqrt(std::pow(playerPos.x - tilePos.x, 2) + std::pow(playerPos.y - tilePos.y, 2));
+
+            if (distance <= viewRadius) {
+                if (grid[y][x] == 1) {
+                    wallTile.setPosition(tilePos);
+                    window.draw(wallTile);
+                } else {
+                    floorTile.setPosition(tilePos);
+                    window.draw(floorTile);
+                }
             } else {
-                floorTile.setPosition(x * TILE_SIZE, y * TILE_SIZE);
-                window.draw(floorTile);
+                sf::RectangleShape fogTile;
+                fogTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
+                fogTile.setFillColor(sf::Color(10, 10, 15));
+                fogTile.setPosition(tilePos);
+                window.draw(fogTile);
             }
         }
     }

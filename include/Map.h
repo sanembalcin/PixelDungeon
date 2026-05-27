@@ -33,7 +33,7 @@ public:
     DungeonMap();
     ~DungeonMap();
     void generateNewMap();
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderWindow& window, const sf::Vector2f& playerPos);
     void freeTree(BspNode* node);
 };
 

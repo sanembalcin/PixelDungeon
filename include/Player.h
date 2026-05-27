@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include "Map.h"
 
-enum Direction { UP, DOWN, LEFT, RIGHT };
+enum class Direction { UP, DOWN, LEFT, RIGHT };
 
 class Player {
 protected:
@@ -53,6 +53,11 @@ public:
     void update(const DungeonMap& map);
     void draw(sf::RenderWindow& window);
     bool getIsAttacking() const override;
+    
+    void heal(int amount) {
+        health += amount;
+        if (health > maxHealth) health = maxHealth;
+    }
 };
 
 #endif
