@@ -46,6 +46,16 @@ int Player::getMaxHealth() const {
     return maxHealth;
 }
 
+void Player::setHealth(int value) {
+    health = value;
+
+    if (health > maxHealth)
+        health = maxHealth;
+
+    if (health < 0)
+        health = 0;
+}
+
 void Player::drawHealthBar(sf::RenderWindow& window) {
     sf::RectangleShape bgBar(sf::Vector2f(100.f, 10.f));
     bgBar.setFillColor(sf::Color(50, 50, 50));

@@ -36,6 +36,7 @@ public:
     void takeDamage(int amount);
     int getHealth() const;
     int getMaxHealth() const;
+    void setHealth(int value);
     void drawHealthBar(sf::RenderWindow& window);
     void move(float offsetX, float offsetY);
     virtual bool getIsAttacking() const;

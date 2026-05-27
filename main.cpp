@@ -5,6 +5,7 @@
 #include "Item.h"
 #include <cmath>
 #include <vector>
+#include <fstream>
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(800, 600), "Pixel Dungeon - Savasci Surumu");
@@ -20,6 +21,9 @@ int main() {
     bool slimePotionSpawned = false;
     sf::Vector2f lastSlimePos(0.f, 0.f);
     sf::Clock trapClock;
+
+    bool pWasPressed = false;
+    bool lWasPressed = false;
 
     int itemCounter = 0;
     int potionCounter = 0;
@@ -93,6 +97,35 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
+
+        bool pPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::P);
+        bool lPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::L);
+
+        if (pPressed && !pWasPressed) {
+            std::ofstream saveFile("save.txt");
+            if (saveFile.is_open()) {
+                saveFile << player.getPosition().x << " " << player.getPosition().y << "\n";
+                saveFile << player.getHealth() << "\n";
+                saveFile.close();
+            }
+        }
+
+        if (lPressed && !lWasPressed) {
+            std::ifstream saveFile("save.txt");
+            if (saveFile.is_open()) {
+                float px;
+                float py;
+                int hp;
+                saveFile >> px >> py;
+                saveFile >> hp;
+                player.setPosition(px, py);
+                player.setHealth(hp);
+                saveFile.close();
+            }
+        }
+
+        pWasPressed = pPressed;
+        lWasPressed = lPressed;
 
         player.handleInput(map);
         player.update(map);
