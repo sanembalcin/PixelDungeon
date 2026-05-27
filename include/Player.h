@@ -3,6 +3,13 @@
 
 #include <SFML/Graphics.hpp>
 #include "Map.h"
+#include <vector>
+
+enum class ItemType {
+    POTION,
+    SWORD,
+    ARMOR
+};
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
 
@@ -15,6 +22,9 @@ protected:
     int health;
     sf::Clock damageClock;
     float damageCooldown;
+    std::vector<ItemType> inventory;
+    int attackPower;
+    float damageReduction;
 
 public:
     Player();
@@ -30,6 +40,10 @@ public:
     void move(float offsetX, float offsetY);
     virtual bool getIsAttacking() const;
     void setPosition(float x, float y);
+    void heal(int amount);
+    void boostAttack(int amount);
+    void boostDefense(float amount);
+    void addToInventory(ItemType type);
 };
 
 class Warrior : public Player {
@@ -53,11 +67,6 @@ public:
     void update(const DungeonMap& map);
     void draw(sf::RenderWindow& window);
     bool getIsAttacking() const override;
-    
-    void heal(int amount) {
-        health += amount;
-        if (health > maxHealth) health = maxHealth;
-    }
 };
 
 #endif
