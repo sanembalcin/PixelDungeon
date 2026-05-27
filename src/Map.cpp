@@ -2,13 +2,29 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <cmath>
 
 DungeonMap::DungeonMap() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
     wallTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
     wallTile.setFillColor(sf::Color(80, 80, 90));
+
     floorTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
     floorTile.setFillColor(sf::Color(30, 30, 35));
+
+    trapTexture.loadFromFile("assets/trap.png");
+    trapSprite.setTexture(trapTexture);
+
+    sf::Vector2u trapSize = trapTexture.getSize();
+
+    if (trapSize.x > 0 && trapSize.y > 0) {
+        trapSprite.setScale(
+            static_cast<float>(TILE_SIZE) / trapSize.x,
+            static_cast<float>(TILE_SIZE) / trapSize.y
+        );
+    }
+
     root = nullptr;
     generateNewMap();
 }
@@ -19,12 +35,15 @@ DungeonMap::~DungeonMap() {
 
 void DungeonMap::freeTree(BspNode* node) {
     if (!node) return;
+
     freeTree(node->left);
     freeTree(node->right);
+
     delete node;
 }
 
 void DungeonMap::generateNewMap() {
+
     for (int y = 0; y < MAP_HEIGHT; ++y) {
         for (int x = 0; x < MAP_WIDTH; ++x) {
             grid[y][x] = 1;
@@ -36,13 +55,16 @@ void DungeonMap::generateNewMap() {
     }
 
     root = new BspNode(0, 0, MAP_WIDTH, MAP_HEIGHT);
-    
+
     std::vector<BspNode*> nodes;
     nodes.push_back(root);
-    
+
     for (size_t i = 0; i < nodes.size(); ++i) {
+
         BspNode* curr = nodes[i];
+
         if (curr->width > 10 || curr->height > 10) {
+
             if (splitNode(curr)) {
                 nodes.push_back(curr->left);
                 nodes.push_back(curr->right);
@@ -54,18 +76,24 @@ void DungeonMap::generateNewMap() {
 
     std::vector<sf::IntRect> allRooms;
     std::vector<BspNode*> stack;
+
     stack.push_back(root);
 
     while (!stack.empty()) {
+
         BspNode* curr = stack.back();
         stack.pop_back();
+
         if (!curr) continue;
-        
+
         if (!curr->left && !curr->right) {
+
             if (curr->room.width > 0) {
                 allRooms.push_back(curr->room);
             }
-        } else {
+        }
+
+        else {
             stack.push_back(curr->left);
             stack.push_back(curr->right);
         }
@@ -77,44 +105,81 @@ void DungeonMap::generateNewMap() {
 }
 
 bool DungeonMap::splitNode(BspNode* node) {
+
     if (node->left || node->right) return false;
 
     bool splitHorizontal = (std::rand() % 2 == 0);
-    if (node->width > node->height * 1.5) splitHorizontal = false;
-    else if (node->height > node->width * 1.5) splitHorizontal = true;
+
+    if (node->width > node->height * 1.5)
+        splitHorizontal = false;
+
+    else if (node->height > node->width * 1.5)
+        splitHorizontal = true;
 
     int maxSplit = (splitHorizontal ? node->height : node->width) - 4;
+
     if (maxSplit < 4) return false;
 
     int splitPoint = 4 + (std::rand() % (maxSplit - 4 + 1));
 
     if (splitHorizontal) {
-        node->left = new BspNode(node->x, node->y, node->width, splitPoint);
-        node->right = new BspNode(node->x, node->y + splitPoint, node->width, node->height - splitPoint);
-    } else {
-        node->left = new BspNode(node->x, node->y, splitPoint, node->height);
-        node->right = new BspNode(node->x + splitPoint, node->y, node->width - splitPoint, node->height);
+
+        node->left = new BspNode(
+            node->x,
+            node->y,
+            node->width,
+            splitPoint
+        );
+
+        node->right = new BspNode(
+            node->x,
+            node->y + splitPoint,
+            node->width,
+            node->height - splitPoint
+        );
+    }
+
+    else {
+
+        node->left = new BspNode(
+            node->x,
+            node->y,
+            splitPoint,
+            node->height
+        );
+
+        node->right = new BspNode(
+            node->x + splitPoint,
+            node->y,
+            node->width - splitPoint,
+            node->height
+        );
     }
 
     return true;
 }
 
 void DungeonMap::createRooms(BspNode* node) {
+
     if (!node) return;
 
     if (node->left || node->right) {
+
         createRooms(node->left);
         createRooms(node->right);
-    } else {
+    }
+
+    else {
+
         int minW = 4;
         int minH = 4;
-        
+
         int w = minW + (std::rand() % (std::max(1, node->width - minW)));
         int h = minH + (std::rand() % (std::max(1, node->height - minH)));
-        
+
         int maxRx = std::max(1, node->width - w - 1);
         int maxRy = std::max(1, node->height - h - 1);
-        
+
         int rx = node->x + 1 + (std::rand() % maxRx);
         int ry = node->y + 1 + (std::rand() % maxRy);
 
@@ -122,6 +187,7 @@ void DungeonMap::createRooms(BspNode* node) {
 
         for (int y = ry; y < ry + h; ++y) {
             for (int x = rx; x < rx + w; ++x) {
+
                 if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
                     grid[y][x] = 0;
                 }
@@ -131,8 +197,10 @@ void DungeonMap::createRooms(BspNode* node) {
 }
 
 void DungeonMap::createCorridor(sf::IntRect roomA, sf::IntRect roomB) {
+
     int startX = roomA.left + roomA.width / 2;
     int startY = roomA.top + roomA.height / 2;
+
     int endX = roomB.left + roomB.width / 2;
     int endY = roomB.top + roomB.height / 2;
 
@@ -140,44 +208,81 @@ void DungeonMap::createCorridor(sf::IntRect roomA, sf::IntRect roomB) {
     int currentY = startY;
 
     while (currentX != endX) {
-        if (currentX >= 0 && currentX < MAP_WIDTH && currentY >= 0 && currentY < MAP_HEIGHT) {
+
+        if (currentX >= 0 && currentX < MAP_WIDTH &&
+            currentY >= 0 && currentY < MAP_HEIGHT) {
+
             grid[currentY][currentX] = 0;
         }
-        if (currentX < endX) currentX++;
-        else currentX--;
+
+        if (currentX < endX)
+            currentX++;
+        else
+            currentX--;
     }
 
     while (currentY != endY) {
-        if (currentX >= 0 && currentX < MAP_WIDTH && currentY >= 0 && currentY < MAP_HEIGHT) {
+
+        if (currentX >= 0 && currentX < MAP_WIDTH &&
+            currentY >= 0 && currentY < MAP_HEIGHT) {
+
             grid[currentY][currentX] = 0;
         }
-        if (currentY < endY) currentY++;
-        else currentY--;
+
+        if (currentY < endY)
+            currentY++;
+        else
+            currentY--;
     }
 }
 
 void DungeonMap::draw(sf::RenderWindow& window, const sf::Vector2f& playerPos) {
+
     float viewRadius = 5.f * TILE_SIZE;
 
     for (int y = 0; y < MAP_HEIGHT; ++y) {
+
         for (int x = 0; x < MAP_WIDTH; ++x) {
+
             sf::Vector2f tilePos(x * TILE_SIZE, y * TILE_SIZE);
-            
-            float distance = std::sqrt(std::pow(playerPos.x - tilePos.x, 2) + std::pow(playerPos.y - tilePos.y, 2));
+
+            float distance = std::sqrt(
+                std::pow(playerPos.x - tilePos.x, 2) +
+                std::pow(playerPos.y - tilePos.y, 2)
+            );
 
             if (distance <= viewRadius) {
+
                 if (grid[y][x] == 1) {
+
                     wallTile.setPosition(tilePos);
                     window.draw(wallTile);
-                } else {
+                }
+
+                else if (grid[y][x] == 3) {
+
+                    floorTile.setPosition(tilePos);
+                    window.draw(floorTile);
+
+                    trapSprite.setPosition(tilePos);
+                    window.draw(trapSprite);
+                }
+
+                else {
+
                     floorTile.setPosition(tilePos);
                     window.draw(floorTile);
                 }
-            } else {
+            }
+
+            else {
+
                 sf::RectangleShape fogTile;
+
                 fogTile.setSize(sf::Vector2f(TILE_SIZE, TILE_SIZE));
                 fogTile.setFillColor(sf::Color(10, 10, 15));
                 fogTile.setPosition(tilePos);
+
                 window.draw(fogTile);
             }
         }
