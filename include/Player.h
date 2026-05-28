@@ -30,9 +30,10 @@ protected:
 
 public:
     Player();
-    void handleInput();
-    void update(const class DungeonMap& map);
-    void draw(sf::RenderWindow& window);
+    virtual ~Player() = default;
+    virtual void handleInput(const DungeonMap& map);
+    virtual void update(const DungeonMap& map);
+    virtual void draw(sf::RenderWindow& window);
     sf::Vector2f getPosition() const;
     sf::FloatRect getBounds() const;
     void takeDamage(int amount);
@@ -66,9 +67,36 @@ private:
 
 public:
     Warrior();
-    void handleInput(const DungeonMap& map);
-    void update(const DungeonMap& map);
-    void draw(sf::RenderWindow& window);
+    void handleInput(const DungeonMap& map) override;
+    void update(const DungeonMap& map) override;
+    void draw(sf::RenderWindow& window) override;
+    bool getIsAttacking() const override;
+};
+
+class Rogue : public Player {
+private:
+    sf::Texture texUp;
+    sf::Texture texDown;
+    sf::Texture texLeft;
+    sf::Texture texRight;
+    sf::Texture atkUp;
+    sf::Texture atkDown;
+    sf::Texture atkLeft;
+    sf::Texture atkRight;
+    sf::Texture deadTexture;
+    bool isAttacking;
+    float attackDuration;
+    sf::Clock attackClock;
+    Direction currentDir;
+    bool isDashing;
+    sf::Clock dashClock;
+    float dashDuration;
+
+public:
+    Rogue();
+    void handleInput(const DungeonMap& map) override;
+    void update(const DungeonMap& map) override;
+    void draw(sf::RenderWindow& window) override;
     bool getIsAttacking() const override;
 };
 

@@ -11,7 +11,7 @@ Player::Player() {
     damageReduction = 0.0f;
 }
 
-void Player::handleInput() {
+void Player::handleInput(const DungeonMap& map) {
 }
 
 void Player::update(const DungeonMap& map) {
@@ -175,9 +175,7 @@ Warrior::Warrior() : Player() {
     sf::Vector2u textureSize = texDown.getSize();
 
     if (textureSize.x > 0 && textureSize.y > 0) {
-        float scaleX = 32.f / textureSize.x;
-        float scaleY = 32.f / textureSize.y;
-        sprite.setScale(scaleX, scaleY);
+        sprite.setScale(32.f / textureSize.x, 32.f / textureSize.y);
     }
 
     sprite.setPosition(100.f, 100.f);
@@ -281,5 +279,147 @@ void Warrior::draw(sf::RenderWindow& window) {
 }
 
 bool Warrior::getIsAttacking() const {
+    return isAttacking;
+}
+
+Rogue::Rogue() : Player() {
+    texUp.loadFromFile("assets/rogue_up.png");
+    texDown.loadFromFile("assets/rogue_down.png");
+    texLeft.loadFromFile("assets/rogue_left.png");
+    texRight.loadFromFile("assets/rogue_right.png");
+
+    atkUp.loadFromFile("assets/rogue_attack_up.png");
+    atkDown.loadFromFile("assets/rogue_attack_down.png");
+    atkLeft.loadFromFile("assets/rogue_attack_left.png");
+    atkRight.loadFromFile("assets/rogue_attack_right.png");
+
+    deadTexture.loadFromFile("assets/rogue_dead.png");
+
+    sprite.setTexture(texDown);
+
+    sf::Vector2u textureSize = texDown.getSize();
+
+    if (textureSize.x > 0 && textureSize.y > 0) {
+        sprite.setScale(32.f / textureSize.x, 32.f / textureSize.y);
+    }
+
+    sprite.setPosition(100.f, 100.f);
+
+    isAttacking = false;
+    attackDuration = 0.12f;
+    currentDir = Direction::DOWN;
+
+    attackPower = 22;
+    speed = 4.8f;
+    maxHealth = 70;
+    health = maxHealth;
+
+    isDashing = false;
+    dashDuration = 0.18f;
+}
+
+void Rogue::handleInput(const DungeonMap& map) {
+    if (isAttacking) return;
+
+    sf::Vector2f movement(0.f, 0.f);
+    Direction prevDir = currentDir;
+
+    float currentSpeed = speed;
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+        currentSpeed = 9.f;
+        isDashing = true;
+        dashClock.restart();
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+        movement.y -= currentSpeed;
+        currentDir = Direction::UP;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+        movement.y += currentSpeed;
+        currentDir = Direction::DOWN;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        movement.x -= currentSpeed;
+        currentDir = Direction::LEFT;
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        movement.x += currentSpeed;
+        currentDir = Direction::RIGHT;
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        isAttacking = true;
+        attackClock.restart();
+
+        if (currentDir == Direction::UP) sprite.setTexture(atkUp);
+        else if (currentDir == Direction::DOWN) sprite.setTexture(atkDown);
+        else if (currentDir == Direction::LEFT) sprite.setTexture(atkLeft);
+        else if (currentDir == Direction::RIGHT) sprite.setTexture(atkRight);
+
+        return;
+    }
+
+    if (movement.x != 0.f || movement.y != 0.f) {
+        if (currentDir != prevDir) {
+            if (currentDir == Direction::UP) sprite.setTexture(texUp);
+            else if (currentDir == Direction::DOWN) sprite.setTexture(texDown);
+            else if (currentDir == Direction::LEFT) sprite.setTexture(texLeft);
+            else if (currentDir == Direction::RIGHT) sprite.setTexture(texRight);
+        }
+
+        sf::Vector2f oldPos = sprite.getPosition();
+
+        sprite.move(movement);
+
+        sf::Vector2f pos = sprite.getPosition();
+
+        float hitboxLeft = pos.x + 10.f;
+        float hitboxTop = pos.y + 14.f;
+        float hitboxWidth = 12.f;
+        float hitboxHeight = 14.f;
+
+        int leftTile = static_cast<int>(hitboxLeft / TILE_SIZE);
+        int rightTile = static_cast<int>((hitboxLeft + hitboxWidth) / TILE_SIZE);
+        int topTile = static_cast<int>(hitboxTop / TILE_SIZE);
+        int bottomTile = static_cast<int>((hitboxTop + hitboxHeight) / TILE_SIZE);
+
+        if (leftTile < 0 || rightTile >= MAP_WIDTH || topTile < 0 || bottomTile >= MAP_HEIGHT) {
+            sprite.setPosition(oldPos);
+            return;
+        }
+
+        for (int y = topTile; y <= bottomTile; ++y) {
+            for (int x = leftTile; x <= rightTile; ++x) {
+                if (map.grid[y][x] == 1) {
+                    sprite.setPosition(oldPos);
+                    return;
+                }
+            }
+        }
+    }
+}
+
+void Rogue::update(const DungeonMap& map) {
+    if (isAttacking && attackClock.getElapsedTime().asSeconds() >= attackDuration) {
+        isAttacking = false;
+
+        if (currentDir == Direction::UP) sprite.setTexture(texUp);
+        else if (currentDir == Direction::DOWN) sprite.setTexture(texDown);
+        else if (currentDir == Direction::LEFT) sprite.setTexture(texLeft);
+        else if (currentDir == Direction::RIGHT) sprite.setTexture(texRight);
+    }
+
+    if (isDashing && dashClock.getElapsedTime().asSeconds() >= dashDuration) {
+        isDashing = false;
+    }
+}
+
+void Rogue::draw(sf::RenderWindow& window) {
+    Player::draw(window);
+}
+
+bool Rogue::getIsAttacking() const {
     return isAttacking;
 }

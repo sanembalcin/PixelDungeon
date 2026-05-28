@@ -9,6 +9,13 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <memory>
+
+enum class GameState {
+    MENU,
+    CHARACTER_SELECT,
+    PLAYING
+};
 
 sf::Vector2f findFirstFloorTile(DungeonMap& map) {
     for (int y = 0; y < MAP_HEIGHT; ++y) {
@@ -88,7 +95,19 @@ int main() {
     window.setFramerateLimit(60);
 
     DungeonMap map;
-    Warrior player;
+
+    int selectedCharacter = 0;
+    GameState gameState = GameState::MENU;
+
+    std::unique_ptr<Player> player;
+
+    if (selectedCharacter == 0) {
+        player = std::make_unique<Warrior>();
+    }
+    else {
+        player = std::make_unique<Rogue>();
+    }
+
     Slime slime(0.f, 0.f);
     Skeleton skeleton(-9999.f, -9999.f);
     MageEnemy mage(-9999.f, -9999.f);
@@ -110,11 +129,11 @@ int main() {
     sf::Vector2f playerStart = findFirstFloorTile(map);
     sf::Vector2f slimeStart = findLastFloorTile(map);
 
-    player.setPosition(playerStart.x, playerStart.y);
+    player->setPosition(playerStart.x, playerStart.y);
     slime.setPosition(slimeStart.x, slimeStart.y);
 
     sf::Font font;
-    font.loadFromFile("C:/Windows/Fonts/arial.ttf");
+    font.loadFromFile("assets/dungeon_font.otf");
 
     while (window.isOpen()) {
         sf::Event event;
@@ -124,6 +143,48 @@ int main() {
                 window.close();
         }
 
+        if (gameState == GameState::MENU) {
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
+                gameState = GameState::CHARACTER_SELECT;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+                window.close();
+            }
+
+            window.clear(sf::Color::Black);
+
+            sf::Text title;
+            title.setFont(font);
+            title.setString("PIXEL DUNGEON");
+            title.setCharacterSize(42);
+            title.setFillColor(sf::Color(180, 180, 255));
+            title.setPosition(180.f, 150.f);
+
+            sf::Text startText;
+            startText.setFont(font);
+            startText.setString("ENTER - START");
+            startText.setCharacterSize(22);
+            startText.setFillColor(sf::Color::White);
+            startText.setPosition(250.f, 300.f);
+
+            sf::Text exitText;
+            exitText.setFont(font);
+            exitText.setString("ESC - QUIT");
+            exitText.setCharacterSize(22);
+            exitText.setFillColor(sf::Color::White);
+            exitText.setPosition(270.f, 350.f);
+
+            window.draw(title);
+            window.draw(startText);
+            window.draw(exitText);
+
+             window.display();
+
+            continue;
+}
+
         bool pPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::P);
         bool lPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::L);
 
@@ -131,8 +192,8 @@ int main() {
             std::ofstream saveFile("save.txt");
 
             if (saveFile.is_open()) {
-                saveFile << player.getPosition().x << " " << player.getPosition().y << "\n";
-                saveFile << player.getHealth() << "\n";
+                saveFile << player->getPosition().x << " " << player->getPosition().y << "\n";
+                saveFile << player->getHealth() << "\n";
                 saveFile << currentFloor << "\n";
                 saveFile.close();
             }
@@ -151,8 +212,8 @@ int main() {
                 saveFile >> hp;
                 saveFile >> floor;
 
-                player.setPosition(px, py);
-                player.setHealth(hp);
+                player->setPosition(px, py);
+                player->setHealth(hp);
                 currentFloor = floor;
 
                 if (currentFloor >= 2) {
@@ -164,7 +225,7 @@ int main() {
                 }
 
                 if (currentFloor >= 3) {
-                    sf::Vector2f magePos = findLastFloorTile(map);
+                    sf::Vector2f magePos = findMiddleFloorTile(map);
                     mage = MageEnemy(magePos.x, magePos.y);
                 }
                 else {
@@ -178,16 +239,16 @@ int main() {
         pWasPressed = pPressed;
         lWasPressed = lPressed;
 
-        player.handleInput(map);
-        player.update(map);
+        player->handleInput(map);
+        player->update(map);
 
-        int pTileX = static_cast<int>((player.getPosition().x + 16.f) / TILE_SIZE);
-        int pTileY = static_cast<int>((player.getPosition().y + 16.f) / TILE_SIZE);
+        int pTileX = static_cast<int>((player->getPosition().x + 16.f) / TILE_SIZE);
+        int pTileY = static_cast<int>((player->getPosition().y + 16.f) / TILE_SIZE);
 
         if (pTileX >= 0 && pTileX < MAP_WIDTH && pTileY >= 0 && pTileY < MAP_HEIGHT) {
             if (map.grid[pTileY][pTileX] == 3) {
                 if (trapClock.getElapsedTime().asSeconds() >= 1.0f) {
-                    player.takeDamage(5);
+                    player->takeDamage(5);
                     trapClock.restart();
                 }
             }
@@ -204,7 +265,7 @@ int main() {
                     sf::Vector2f newSkeletonPos = findMiddleFloorTile(map);
                     sf::Vector2f newMagePos = findMiddleFloorTile(map);
 
-                    player.setPosition(newPlayerPos.x, newPlayerPos.y);
+                    player->setPosition(newPlayerPos.x, newPlayerPos.y);
                     slime.setPosition(newSlimePos.x, newSlimePos.y);
 
                     if (currentFloor >= 2) {
@@ -227,7 +288,7 @@ int main() {
         }
 
         if (!slime.isDead()) {
-            slime.update(player.getPosition(), map);
+            slime.update(player->getPosition(), map);
             lastSlimePos = slime.getPosition();
         }
         else if (!slimePotionSpawned) {
@@ -236,33 +297,33 @@ int main() {
         }
 
         if (currentFloor >= 2 && !skeleton.isDead()) {
-            skeleton.update(player.getPosition(), map);
+            skeleton.update(player->getPosition(), map);
 
-            if (skeleton.getBounds().intersects(player.getBounds())) {
+            if (skeleton.getBounds().intersects(player->getBounds())) {
                 if (skeleton.tryAttack()) {
-                    player.takeDamage(skeleton.getDamage());
+                    player->takeDamage(skeleton.getDamage());
                 }
             }
         }
 
         if (currentFloor >= 3 && !mage.isDead()) {
-            mage.update(player.getPosition(), map);
+            mage.update(player->getPosition(), map);
 
             std::vector<Projectile>& projectiles = mage.getProjectiles();
 
             for (size_t i = 0; i < projectiles.size(); ++i) {
-                if (projectiles[i].isActive() && projectiles[i].getBounds().intersects(player.getBounds())) {
-                    player.takeDamage(projectiles[i].getDamage());
+                if (projectiles[i].isActive() && projectiles[i].getBounds().intersects(player->getBounds())) {
+                    player->takeDamage(projectiles[i].getDamage());
                     projectiles[i].deactivate();
                 }
             }
         }
 
-        if (player.getIsAttacking() && player.getBounds().intersects(slime.getBounds()) && !slime.isDead()) {
+        if (player->getIsAttacking() && player->getBounds().intersects(slime.getBounds()) && !slime.isDead()) {
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
                 slime.takeDamage(25);
 
-                sf::Vector2f slimePush = slime.getPosition() - player.getPosition();
+                sf::Vector2f slimePush = slime.getPosition() - player->getPosition();
 
                 float sLength = std::sqrt(
                     slimePush.x * slimePush.x +
@@ -283,15 +344,15 @@ int main() {
         }
 
         if (currentFloor >= 2 &&
-            player.getIsAttacking() &&
-            player.getBounds().intersects(skeleton.getBounds()) &&
+            player->getIsAttacking() &&
+            player->getBounds().intersects(skeleton.getBounds()) &&
             !skeleton.isDead()) {
 
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
                 skeleton.takeDamage(25);
 
                 if (!skeleton.isDead()) {
-                    sf::Vector2f pushDir = skeleton.getPosition() - player.getPosition();
+                    sf::Vector2f pushDir = skeleton.getPosition() - player->getPosition();
 
                     float length = std::sqrt(
                         pushDir.x * pushDir.x +
@@ -321,8 +382,8 @@ int main() {
         }
 
         if (currentFloor >= 3 &&
-            player.getIsAttacking() &&
-            player.getBounds().intersects(mage.getBounds()) &&
+            player->getIsAttacking() &&
+            player->getBounds().intersects(mage.getBounds()) &&
             !mage.isDead()) {
 
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
@@ -331,8 +392,8 @@ int main() {
             }
         }
 
-        if (!slime.isDead() && player.getBounds().intersects(slime.getBounds())) {
-            player.takeDamage(15);
+        if (!slime.isDead() && player->getBounds().intersects(slime.getBounds())) {
+            player->takeDamage(15);
         }
 
         if (slime.isDead()) {
@@ -340,21 +401,21 @@ int main() {
         }
 
         for (size_t i = 0; i < worldItems.size(); ++i) {
-            if (worldItems[i].isActive() && player.getBounds().intersects(worldItems[i].getBounds())) {
+            if (worldItems[i].isActive() && player->getBounds().intersects(worldItems[i].getBounds())) {
                 worldItems[i].collect();
                 ItemType t = worldItems[i].getType();
-                player.addToInventory(t);
+                player->addToInventory(t);
             }
         }
 
         window.clear();
 
-        map.draw(window, player.getPosition());
+        map.draw(window, player->getPosition());
 
         for (size_t i = 0; i < worldItems.size(); ++i) {
             sf::FloatRect itemBounds = worldItems[i].getBounds();
             sf::Vector2f itemPos(itemBounds.left, itemBounds.top);
-            sf::Vector2f pPos = player.getPosition();
+            sf::Vector2f pPos = player->getPosition();
 
             float distToItem = std::sqrt(
                 std::pow(pPos.x - itemPos.x, 2) +
@@ -364,13 +425,13 @@ int main() {
             float viewRadius = 5.f * TILE_SIZE;
 
             if (distToItem <= viewRadius) {
-                worldItems[i].draw(window, player.getPosition());
+                worldItems[i].draw(window, player->getPosition());
             }
         }
 
         if (!slime.isDead()) {
             sf::Vector2f slimePos = slime.getPosition();
-            sf::Vector2f pPos = player.getPosition();
+            sf::Vector2f pPos = player->getPosition();
 
             float distToSlime = std::sqrt(
                 std::pow(pPos.x - slimePos.x, 2) +
@@ -386,7 +447,7 @@ int main() {
 
         if (currentFloor >= 2) {
             sf::Vector2f skeletonPos = skeleton.getPosition();
-            sf::Vector2f pPos = player.getPosition();
+            sf::Vector2f pPos = player->getPosition();
 
             float distToSkeleton = std::sqrt(
                 std::pow(pPos.x - skeletonPos.x, 2) +
@@ -402,7 +463,7 @@ int main() {
 
         if (currentFloor >= 3) {
             sf::Vector2f magePos = mage.getPosition();
-            sf::Vector2f pPos = player.getPosition();
+            sf::Vector2f pPos = player->getPosition();
 
             float distToMage = std::sqrt(
                 std::pow(pPos.x - magePos.x, 2) +
@@ -416,8 +477,8 @@ int main() {
             }
         }
 
-        player.draw(window);
-        player.drawHealthBar(window);
+        player->draw(window);
+        player->drawHealthBar(window);
 
         sf::Text floorText;
         floorText.setFont(font);
