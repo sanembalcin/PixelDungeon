@@ -1,9 +1,9 @@
-#include "Enemy.h"
+#include "Slime.h"
 #include "Map.h"
 #include <cmath>
 #include <queue>
 
-Enemy::Enemy(float startX, float startY) {
+Slime::Slime(float startX, float startY) {
     if (!texture.loadFromFile("assets/slime.png")) {
     }
     sprite.setTexture(texture);
@@ -13,7 +13,7 @@ Enemy::Enemy(float startX, float startY) {
     health = 100;
 }
 
-std::vector<sf::Vector2i> Enemy::findPath(const sf::Vector2i& start, const sf::Vector2i& target, const DungeonMap& map) {
+std::vector<sf::Vector2i> Slime::findPath(const sf::Vector2i& start, const sf::Vector2i& target, const DungeonMap& map) {
     std::vector<sf::Vector2i> path;
     if (start == target) return path;
 
@@ -67,7 +67,7 @@ std::vector<sf::Vector2i> Enemy::findPath(const sf::Vector2i& start, const sf::V
     return path;
 }
 
-void Enemy::update(const sf::Vector2f& playerPos, const DungeonMap& map) {
+void Slime::update(const sf::Vector2f& playerPos, const DungeonMap& map) {
     static sf::Clock aiClock;
     sf::Vector2f enemyPos = sprite.getPosition();
     
@@ -95,31 +95,31 @@ void Enemy::update(const sf::Vector2f& playerPos, const DungeonMap& map) {
     }
 }
 
-void Enemy::draw(sf::RenderWindow& window) {
+void Slime::draw(sf::RenderWindow& window) {
     window.draw(sprite);
 }
 
-sf::FloatRect Enemy::getBounds() const {
+sf::FloatRect Slime::getBounds() const {
     return sprite.getGlobalBounds();
 }
 
-int Enemy::getHealth() const {
+int Slime::getHealth() const {
     return health;
 }
 
-sf::Vector2f Enemy::getPosition() const {
+sf::Vector2f Slime::getPosition() const {
     return sprite.getPosition();
 }
 
-void Enemy::takeDamage(int amount) {
+void Slime::takeDamage(int amount) {
     health -= amount;
     if (health < 0) health = 0;
 }
 
-bool Enemy::isDead() const {
+bool Slime::isDead() const {
     return health <= 0;
 }
 
-void Enemy::setPosition(float x, float y) {
+void Slime::setPosition(float x, float y) {
     sprite.setPosition(x, y);
 }

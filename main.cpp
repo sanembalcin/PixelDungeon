@@ -1,7 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include "Map.h"
 #include "Player.h"
-#include "Enemy.h"
+#include "Slime.h"
+#include "Skeleton.h"
 #include "Item.h"
 #include <cmath>
 #include <vector>
@@ -28,6 +29,17 @@ sf::Vector2f findLastFloorTile(DungeonMap& map) {
         }
     }
     return sf::Vector2f(400.f, 300.f);
+}
+
+sf::Vector2f findMiddleFloorTile(DungeonMap& map) {
+    for (int y = MAP_HEIGHT / 2; y < MAP_HEIGHT; ++y) {
+        for (int x = MAP_WIDTH / 2; x < MAP_WIDTH; ++x) {
+            if (map.grid[y][x] == 0) {
+                return sf::Vector2f(x * TILE_SIZE, y * TILE_SIZE);
+            }
+        }
+    }
+    return findLastFloorTile(map);
 }
 
 void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
@@ -76,7 +88,8 @@ int main() {
 
     DungeonMap map;
     Warrior player;
-    Enemy slime(0.f, 0.f);
+    Slime slime(0.f, 0.f);
+    Skeleton skeleton(-9999.f, -9999.f);
 
     std::vector<Item> worldItems;
     worldItems.reserve(20);
@@ -91,8 +104,11 @@ int main() {
 
     spawnItemsAndTraps(map, worldItems);
 
-    player.setPosition(findFirstFloorTile(map).x, findFirstFloorTile(map).y);
-    slime.setPosition(findLastFloorTile(map).x, findLastFloorTile(map).y);
+    sf::Vector2f playerStart = findFirstFloorTile(map);
+    sf::Vector2f slimeStart = findLastFloorTile(map);
+
+    player.setPosition(playerStart.x, playerStart.y);
+    slime.setPosition(slimeStart.x, slimeStart.y);
 
     sf::Font font;
     font.loadFromFile("C:/Windows/Fonts/arial.ttf");
@@ -136,6 +152,14 @@ int main() {
                 player.setHealth(hp);
                 currentFloor = floor;
 
+                if (currentFloor >= 2) {
+                    sf::Vector2f skelPos = findMiddleFloorTile(map);
+                    skeleton.setPosition(skelPos.x, skelPos.y);
+                }
+                else {
+                    skeleton.setPosition(-9999.f, -9999.f);
+                }
+
                 saveFile.close();
             }
         }
@@ -159,22 +183,28 @@ int main() {
 
             if (map.grid[pTileY][pTileX] == 4) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
-
                     currentFloor++;
 
                     map.generateNewMap();
-
                     spawnItemsAndTraps(map, worldItems);
 
                     sf::Vector2f newPlayerPos = findFirstFloorTile(map);
                     sf::Vector2f newSlimePos = findLastFloorTile(map);
+                    sf::Vector2f newSkeletonPos = findMiddleFloorTile(map);
 
                     player.setPosition(newPlayerPos.x, newPlayerPos.y);
                     slime.setPosition(newSlimePos.x, newSlimePos.y);
 
+                    if (currentFloor >= 2) {
+                        skeleton = Skeleton(newSkeletonPos.x, newSkeletonPos.y);
+                    }
+                    else {
+                        skeleton.setPosition(-9999.f, -9999.f);
+                    }
+
                     slimePotionSpawned = false;
-    }
-}
+                }
+            }
         }
 
         if (!slime.isDead()) {
@@ -184,6 +214,16 @@ int main() {
         else if (!slimePotionSpawned) {
             worldItems.emplace_back(ItemType::POTION, lastSlimePos.x + 8.f, lastSlimePos.y + 8.f, "assets/potion.png");
             slimePotionSpawned = true;
+        }
+
+        if (currentFloor >= 2 && !skeleton.isDead()) {
+            skeleton.update(player.getPosition(), map);
+
+            if (skeleton.getBounds().intersects(player.getBounds())) {
+                if (skeleton.tryAttack()) {
+                    player.takeDamage(skeleton.getDamage());
+                }
+            }
         }
 
         if (player.getIsAttacking() && player.getBounds().intersects(slime.getBounds()) && !slime.isDead()) {
@@ -196,6 +236,10 @@ int main() {
                 slimePush /= sLength;
                 slime.setPosition(slime.getPosition().x + slimePush.x * 30.f, slime.getPosition().y + slimePush.y * 30.f);
             }
+        }
+
+        if (currentFloor >= 2 && player.getIsAttacking() && player.getBounds().intersects(skeleton.getBounds()) && !skeleton.isDead()) {
+            skeleton.takeDamage(25);
         }
 
         if (!slime.isDead() && player.getBounds().intersects(slime.getBounds())) {
@@ -240,6 +284,18 @@ int main() {
 
             if (distToSlime <= viewRadius) {
                 slime.draw(window);
+            }
+        }
+
+        if (currentFloor >= 2 && !skeleton.isDead()) {
+            sf::Vector2f skeletonPos = skeleton.getPosition();
+            sf::Vector2f pPos = player.getPosition();
+
+            float distToSkeleton = std::sqrt(std::pow(pPos.x - skeletonPos.x, 2) + std::pow(pPos.y - skeletonPos.y, 2));
+            float viewRadius = 5.f * TILE_SIZE;
+
+            if (distToSkeleton <= viewRadius) {
+                skeleton.draw(window);
             }
         }
 
