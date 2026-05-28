@@ -98,6 +98,7 @@ int main() {
     bool slimePotionSpawned = false;
     sf::Vector2f lastSlimePos(0.f, 0.f);
     sf::Clock trapClock;
+    sf::Clock playerAttackClock;
 
     bool pWasPressed = false;
     bool lWasPressed = false;
@@ -227,19 +228,55 @@ int main() {
         }
 
         if (player.getIsAttacking() && player.getBounds().intersects(slime.getBounds()) && !slime.isDead()) {
-            slime.takeDamage(25);
+            if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
+                slime.takeDamage(25);
 
-            sf::Vector2f slimePush = slime.getPosition() - player.getPosition();
-            float sLength = std::sqrt(slimePush.x * slimePush.x + slimePush.y * slimePush.y);
+                sf::Vector2f slimePush = slime.getPosition() - player.getPosition();
 
-            if (sLength != 0) {
-                slimePush /= sLength;
-                slime.setPosition(slime.getPosition().x + slimePush.x * 30.f, slime.getPosition().y + slimePush.y * 30.f);
+                float sLength = std::sqrt(
+                    slimePush.x * slimePush.x +
+                    slimePush.y * slimePush.y
+                );
+
+                if (sLength != 0) {
+                    slimePush /= sLength;
+
+                    slime.setPosition(
+                        slime.getPosition().x + slimePush.x * 30.f,
+                        slime.getPosition().y + slimePush.y * 30.f
+                    );
+                }
+
+                playerAttackClock.restart();
             }
         }
 
-        if (currentFloor >= 2 && player.getIsAttacking() && player.getBounds().intersects(skeleton.getBounds()) && !skeleton.isDead()) {
-            skeleton.takeDamage(25);
+        if (currentFloor >= 2 &&
+            player.getIsAttacking() &&
+            player.getBounds().intersects(skeleton.getBounds()) &&
+            !skeleton.isDead()) {
+
+            if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
+                skeleton.takeDamage(25);
+
+                sf::Vector2f pushDir = skeleton.getPosition() - player.getPosition();
+
+                float length = std::sqrt(
+                    pushDir.x * pushDir.x +
+                    pushDir.y * pushDir.y
+                );
+
+                if (length != 0) {
+                    pushDir /= length;
+
+                    skeleton.setPosition(
+                        skeleton.getPosition().x + pushDir.x * 35.f,
+                        skeleton.getPosition().y + pushDir.y * 35.f
+                    );
+                }
+
+                playerAttackClock.restart();
+            }
         }
 
         if (!slime.isDead() && player.getBounds().intersects(slime.getBounds())) {
@@ -267,7 +304,11 @@ int main() {
             sf::Vector2f itemPos(itemBounds.left, itemBounds.top);
             sf::Vector2f pPos = player.getPosition();
 
-            float distToItem = std::sqrt(std::pow(pPos.x - itemPos.x, 2) + std::pow(pPos.y - itemPos.y, 2));
+            float distToItem = std::sqrt(
+                std::pow(pPos.x - itemPos.x, 2) +
+                std::pow(pPos.y - itemPos.y, 2)
+            );
+
             float viewRadius = 5.f * TILE_SIZE;
 
             if (distToItem <= viewRadius) {
@@ -279,7 +320,11 @@ int main() {
             sf::Vector2f slimePos = slime.getPosition();
             sf::Vector2f pPos = player.getPosition();
 
-            float distToSlime = std::sqrt(std::pow(pPos.x - slimePos.x, 2) + std::pow(pPos.y - slimePos.y, 2));
+            float distToSlime = std::sqrt(
+                std::pow(pPos.x - slimePos.x, 2) +
+                std::pow(pPos.y - slimePos.y, 2)
+            );
+
             float viewRadius = 5.f * TILE_SIZE;
 
             if (distToSlime <= viewRadius) {
@@ -291,7 +336,11 @@ int main() {
             sf::Vector2f skeletonPos = skeleton.getPosition();
             sf::Vector2f pPos = player.getPosition();
 
-            float distToSkeleton = std::sqrt(std::pow(pPos.x - skeletonPos.x, 2) + std::pow(pPos.y - skeletonPos.y, 2));
+            float distToSkeleton = std::sqrt(
+                std::pow(pPos.x - skeletonPos.x, 2) +
+                std::pow(pPos.y - skeletonPos.y, 2)
+            );
+
             float viewRadius = 5.f * TILE_SIZE;
 
             if (distToSkeleton <= viewRadius) {

@@ -21,7 +21,9 @@ protected:
     int maxHealth;
     int health;
     sf::Clock damageClock;
+    sf::Clock flashClock;
     float damageCooldown;
+    bool damageFlash;
     std::vector<ItemType> inventory;
     int attackPower;
     float damageReduction;

@@ -6,6 +6,7 @@ Player::Player() {
     maxHealth = 100;
     health = maxHealth;
     damageCooldown = 1.0f;
+    damageFlash = false;
     attackPower = 10;
     damageReduction = 0.0f;
 }
@@ -17,6 +18,11 @@ void Player::update(const DungeonMap& map) {
 }
 
 void Player::draw(sf::RenderWindow& window) {
+    if (damageFlash && flashClock.getElapsedTime().asSeconds() >= 0.15f) {
+        sprite.setColor(sf::Color::White);
+        damageFlash = false;
+    }
+
     window.draw(sprite);
 }
 
@@ -31,9 +37,17 @@ sf::FloatRect Player::getBounds() const {
 void Player::takeDamage(int amount) {
     if (damageClock.getElapsedTime().asSeconds() >= damageCooldown) {
         int finalDamage = amount - static_cast<int>(amount * damageReduction);
+
         if (finalDamage < 1) finalDamage = 1;
+
         health -= finalDamage;
+
         if (health < 0) health = 0;
+
+        damageFlash = true;
+        flashClock.restart();
+        sprite.setColor(sf::Color(255, 80, 80));
+
         damageClock.restart();
     }
 }
@@ -67,6 +81,7 @@ void Player::drawHealthBar(sf::RenderWindow& window) {
     sf::Vector2f viewSize = window.getView().getSize();
 
     sf::Vector2f uiPos(camPos.x - viewSize.x / 2.f + 10.f, camPos.y - viewSize.y / 2.f + 10.f);
+
     bgBar.setPosition(uiPos);
     fgBar.setPosition(uiPos);
 
@@ -74,6 +89,7 @@ void Player::drawHealthBar(sf::RenderWindow& window) {
     window.draw(fgBar);
 
     sf::Font font;
+
     if (font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
         sf::Text uiText;
         uiText.setFont(font);
@@ -91,8 +107,10 @@ void Player::drawHealthBar(sf::RenderWindow& window) {
         }
 
         std::string info = "ATK: " + std::to_string(attackPower) + " | Iksir: " + std::to_string(pCount) + " Kilic: " + std::to_string(sCount) + " Zirh: " + std::to_string(aCount);
+
         uiText.setString(info);
         uiText.setPosition(uiPos.x, uiPos.y + 15.f);
+
         window.draw(uiText);
     }
 }
@@ -111,7 +129,9 @@ void Player::setPosition(float x, float y) {
 
 void Player::heal(int amount) {
     health += amount;
-    if (health > maxHealth) health = maxHealth;
+
+    if (health > maxHealth)
+        health = maxHealth;
 }
 
 void Player::boostAttack(int amount) {
@@ -120,7 +140,9 @@ void Player::boostAttack(int amount) {
 
 void Player::boostDefense(float amount) {
     damageReduction += amount;
-    if (damageReduction > 0.8f) damageReduction = 0.8f;
+
+    if (damageReduction > 0.8f)
+        damageReduction = 0.8f;
 }
 
 void Player::addToInventory(ItemType type) {
@@ -151,6 +173,7 @@ Warrior::Warrior() : Player() {
     sprite.setTexture(texDown);
 
     sf::Vector2u textureSize = texDown.getSize();
+
     if (textureSize.x > 0 && textureSize.y > 0) {
         float scaleX = 32.f / textureSize.x;
         float scaleY = 32.f / textureSize.y;
@@ -211,6 +234,7 @@ void Warrior::handleInput(const DungeonMap& map) {
         }
 
         sf::Vector2f oldPos = sprite.getPosition();
+
         sprite.move(movement);
 
         sf::Vector2f pos = sprite.getPosition();
@@ -253,7 +277,7 @@ void Warrior::update(const DungeonMap& map) {
 }
 
 void Warrior::draw(sf::RenderWindow& window) {
-    window.draw(sprite);
+    Player::draw(window);
 }
 
 bool Warrior::getIsAttacking() const {

@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "Map.h"
+#include <vector>
 
 class Skeleton {
 private:
@@ -22,10 +23,16 @@ private:
     int damage;
     bool dead;
     bool attacking;
+    bool flashing;
 
     sf::Clock attackClock;
+    sf::Clock aiClock;
+    sf::Clock flashClock;
+
     float attackCooldown;
     int direction;
+
+    std::vector<sf::Vector2i> path;
 
 public:
     Skeleton(float x, float y);
@@ -42,6 +49,8 @@ public:
     int getDamage() const;
     bool canAttack() const;
     bool tryAttack();
+
+    std::vector<sf::Vector2i> findPath(const sf::Vector2i& start, const sf::Vector2i& target, const DungeonMap& map);
 };
 
 #endif

@@ -13,6 +13,8 @@ private:
     int health;
     int damage;
     bool dead;
+    bool flashing;
+    sf::Clock flashClock;
     std::vector<sf::Vector2i> path;
 
 public:
