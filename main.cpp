@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Slime.h"
 #include "Skeleton.h"
+#include "MageEnemy.h"
 #include "Item.h"
 #include <cmath>
 #include <vector>
@@ -90,6 +91,7 @@ int main() {
     Warrior player;
     Slime slime(0.f, 0.f);
     Skeleton skeleton(-9999.f, -9999.f);
+    MageEnemy mage(-9999.f, -9999.f);
 
     std::vector<Item> worldItems;
     worldItems.reserve(20);
@@ -155,10 +157,18 @@ int main() {
 
                 if (currentFloor >= 2) {
                     sf::Vector2f skelPos = findMiddleFloorTile(map);
-                    skeleton.setPosition(skelPos.x, skelPos.y);
+                    skeleton = Skeleton(skelPos.x, skelPos.y);
                 }
                 else {
                     skeleton.setPosition(-9999.f, -9999.f);
+                }
+
+                if (currentFloor >= 3) {
+                    sf::Vector2f magePos = findLastFloorTile(map);
+                    mage = MageEnemy(magePos.x, magePos.y);
+                }
+                else {
+                    mage = MageEnemy(-9999.f, -9999.f);
                 }
 
                 saveFile.close();
@@ -192,6 +202,7 @@ int main() {
                     sf::Vector2f newPlayerPos = findFirstFloorTile(map);
                     sf::Vector2f newSlimePos = findLastFloorTile(map);
                     sf::Vector2f newSkeletonPos = findMiddleFloorTile(map);
+                    sf::Vector2f newMagePos = findMiddleFloorTile(map);
 
                     player.setPosition(newPlayerPos.x, newPlayerPos.y);
                     slime.setPosition(newSlimePos.x, newSlimePos.y);
@@ -201,6 +212,13 @@ int main() {
                     }
                     else {
                         skeleton.setPosition(-9999.f, -9999.f);
+                    }
+
+                    if (currentFloor >= 3) {
+                        mage = MageEnemy(newMagePos.x, newMagePos.y);
+                    }
+                    else {
+                        mage = MageEnemy(-9999.f, -9999.f);
                     }
 
                     slimePotionSpawned = false;
@@ -223,6 +241,19 @@ int main() {
             if (skeleton.getBounds().intersects(player.getBounds())) {
                 if (skeleton.tryAttack()) {
                     player.takeDamage(skeleton.getDamage());
+                }
+            }
+        }
+
+        if (currentFloor >= 3 && !mage.isDead()) {
+            mage.update(player.getPosition(), map);
+
+            std::vector<Projectile>& projectiles = mage.getProjectiles();
+
+            for (size_t i = 0; i < projectiles.size(); ++i) {
+                if (projectiles[i].isActive() && projectiles[i].getBounds().intersects(player.getBounds())) {
+                    player.takeDamage(projectiles[i].getDamage());
+                    projectiles[i].deactivate();
                 }
             }
         }
@@ -259,22 +290,43 @@ int main() {
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
                 skeleton.takeDamage(25);
 
-                sf::Vector2f pushDir = skeleton.getPosition() - player.getPosition();
+                if (!skeleton.isDead()) {
+                    sf::Vector2f pushDir = skeleton.getPosition() - player.getPosition();
 
-                float length = std::sqrt(
-                    pushDir.x * pushDir.x +
-                    pushDir.y * pushDir.y
-                );
-
-                if (length != 0) {
-                    pushDir /= length;
-
-                    skeleton.setPosition(
-                        skeleton.getPosition().x + pushDir.x * 35.f,
-                        skeleton.getPosition().y + pushDir.y * 35.f
+                    float length = std::sqrt(
+                        pushDir.x * pushDir.x +
+                        pushDir.y * pushDir.y
                     );
+
+                    if (length != 0) {
+                        pushDir /= length;
+
+                        float newSkelX = skeleton.getPosition().x + pushDir.x * 35.f;
+                        float newSkelY = skeleton.getPosition().y + pushDir.y * 35.f;
+
+                        int skelTileX = static_cast<int>((newSkelX + 16.f) / TILE_SIZE);
+                        int skelTileY = static_cast<int>((newSkelY + 16.f) / TILE_SIZE);
+
+                        if (skelTileX >= 0 && skelTileX < MAP_WIDTH &&
+                            skelTileY >= 0 && skelTileY < MAP_HEIGHT &&
+                            map.grid[skelTileY][skelTileX] != 1) {
+
+                            skeleton.setPosition(newSkelX, newSkelY);
+                        }
+                    }
                 }
 
+                playerAttackClock.restart();
+            }
+        }
+
+        if (currentFloor >= 3 &&
+            player.getIsAttacking() &&
+            player.getBounds().intersects(mage.getBounds()) &&
+            !mage.isDead()) {
+
+            if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
+                mage.takeDamage(25);
                 playerAttackClock.restart();
             }
         }
@@ -332,7 +384,7 @@ int main() {
             }
         }
 
-        if (currentFloor >= 2 && !skeleton.isDead()) {
+        if (currentFloor >= 2) {
             sf::Vector2f skeletonPos = skeleton.getPosition();
             sf::Vector2f pPos = player.getPosition();
 
@@ -345,6 +397,22 @@ int main() {
 
             if (distToSkeleton <= viewRadius) {
                 skeleton.draw(window);
+            }
+        }
+
+        if (currentFloor >= 3) {
+            sf::Vector2f magePos = mage.getPosition();
+            sf::Vector2f pPos = player.getPosition();
+
+            float distToMage = std::sqrt(
+                std::pow(pPos.x - magePos.x, 2) +
+                std::pow(pPos.y - magePos.y, 2)
+            );
+
+            float viewRadius = 5.f * TILE_SIZE;
+
+            if (distToMage <= viewRadius) {
+                mage.draw(window);
             }
         }
 
