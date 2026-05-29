@@ -249,6 +249,26 @@ int Player::getAttackPower() const {
     return attackPower;
 }
 
+float Player::getSpeed() const {
+    return speed;
+}
+
+void Player::setMaxHealth(int value) {
+    maxHealth = value;
+}
+
+void Player::setAttackPower(int value) {
+    attackPower = value;
+}
+
+void Player::setSpeed(float value) {
+    speed = value;
+}
+
+void Player::setViewRadius(float value) {
+    viewRadius = value;
+}
+
 void Player::boostDefense(float amount) {
     damageReduction += amount;
 
@@ -275,7 +295,7 @@ void Player::addToInventory(ItemType type) {
         boostAttack(5);
     }
     else if (type == ItemType::MIND) {
-        viewRadius += 0.5f * TILE_SIZE;
+        viewRadius += 1.f * TILE_SIZE;
     }
 }
 

@@ -42,6 +42,11 @@ public:
     int getHealth() const;
     int getMaxHealth() const;
     void setHealth(int value);
+    float getSpeed() const;
+    void setMaxHealth(int value);
+    void setAttackPower(int value);
+    void setSpeed(float value);
+    void setViewRadius(float value);
     void drawHealthBar(sf::RenderWindow& window);
     void move(float offsetX, float offsetY);
     virtual bool getIsAttacking() const;

@@ -299,9 +299,8 @@ void DungeonMap::createCorridor(sf::IntRect roomA, sf::IntRect roomB) {
     }
 }
 
-void DungeonMap::draw(sf::RenderWindow& window, const sf::Vector2f& playerPos) {
+void DungeonMap::draw(sf::RenderWindow& window, const sf::Vector2f& playerPos, float viewRadius) {
 
-    float viewRadius = 5.f * TILE_SIZE;
 
     for (int y = 0; y < MAP_HEIGHT; ++y) {
 

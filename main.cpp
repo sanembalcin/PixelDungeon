@@ -109,7 +109,7 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
                         swordCounter++;
                         itemCounter++;
                     }
-                    else if (r == 3 && mindCounter < 1 && rand() % 100 < 15) {
+                    else if (r == 3 && mindCounter < 1 && rand() % 100 < 80) {
                         worldItems.emplace_back(ItemType::MIND, px, py, "assets/mind.png");
                         mindCounter++;
                         itemCounter++;
@@ -340,7 +340,7 @@ int main() {
         if (gameState == GameState::PLAYER_DEAD) {
             window.clear(sf::Color(10, 0, 0));
 
-            map.draw(window, player->getPosition());
+            map.draw(window, player->getPosition(), player->getViewRadius());
             player->draw(window);
 
             if (deathClock.getElapsedTime().asSeconds() >= 1.5f) {
@@ -435,6 +435,10 @@ int main() {
             if (saveFile.is_open()) {
                 saveFile << player->getPosition().x << " " << player->getPosition().y << "\n";
                 saveFile << player->getHealth() << "\n";
+                saveFile << player->getMaxHealth() << "\n";
+                saveFile << player->getAttackPower() << "\n";
+                saveFile << player->getSpeed() << "\n";
+                saveFile << player->getViewRadius() << "\n";
                 saveFile << currentFloor << "\n";
                 saveFile.close();
             }
@@ -447,14 +451,26 @@ int main() {
                 float px;
                 float py;
                 int hp;
+                int maxHp;
+                int atk;
+                float spd;
+                float vr;
                 int floor;
 
                 saveFile >> px >> py;
                 saveFile >> hp;
+                saveFile >> maxHp;
+                saveFile >> atk;
+                saveFile >> spd;
+                saveFile >> vr;
                 saveFile >> floor;
 
-                player->setPosition(px, py);
+                player->setMaxHealth(maxHp);
                 player->setHealth(hp);
+                player->setAttackPower(atk);
+                player->setSpeed(spd);
+                player->setViewRadius(vr);
+                player->setPosition(px, py);
                 currentFloor = floor;
 
                 if (currentFloor >= 2) {
@@ -694,7 +710,7 @@ int main() {
 
         window.clear();
 
-        map.draw(window, player->getPosition());
+        map.draw(window, player->getPosition(),player->getViewRadius());
 
         for (size_t i = 0; i < worldItems.size(); ++i) {
             sf::FloatRect itemBounds = worldItems[i].getBounds();
@@ -708,7 +724,7 @@ int main() {
 
             float viewRadius = player->getViewRadius();
 
-            if (distToItem <= viewRadius) {
+            if (distToItem <= player->getViewRadius()) {
                 worldItems[i].draw(window, player->getPosition());
             }
         }

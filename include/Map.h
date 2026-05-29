@@ -50,7 +50,7 @@ public:
     ~DungeonMap();
     void generateNewMap();
     void placeStairs(bool hasUpStairs);
-    void draw(sf::RenderWindow& window, const sf::Vector2f& playerPos);
+    void draw(sf::RenderWindow& window, const sf::Vector2f& playerPos, float viewRadius);
     
 };
 
