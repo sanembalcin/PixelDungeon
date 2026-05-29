@@ -12,8 +12,8 @@ Slime::Slime(float startX, float startY) {
     sprite.setPosition(startX, startY);
 
     speed = 1.8f;
-    health = 100;
-    damage = 15;
+    health = 80;
+    damage = 5;
     dead = false;
     flashing = false;
 }
@@ -93,7 +93,6 @@ std::vector<sf::Vector2i> Slime::findPath(const sf::Vector2i& start, const sf::V
 }
 
 void Slime::update(const sf::Vector2f& playerPos, const DungeonMap& map) {
-    static sf::Clock aiClock;
 
     if (flashing && flashClock.getElapsedTime().asSeconds() >= 0.15f) {
         sprite.setColor(sf::Color::White);

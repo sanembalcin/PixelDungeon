@@ -13,6 +13,7 @@
 
 enum class GameState {
     MENU,
+    HOW_TO_PLAY,
     CHARACTER_SELECT,
     PLAYING,
     PLAYER_DEAD,
@@ -181,8 +182,14 @@ int main() {
 
         if (gameState == GameState::MENU) {
 
+            
+
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
                 gameState = GameState::CHARACTER_SELECT;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
+                gameState = GameState::HOW_TO_PLAY;
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
@@ -251,28 +258,36 @@ int main() {
 
             sf::Text startText;
             startText.setFont(font);
-            startText.setString("ENTER - NEW GAME");
+            startText.setString("ENTER - YENI OYUN");
             startText.setCharacterSize(22);
             startText.setFillColor(sf::Color::White);
             startText.setPosition(250.f, 300.f);
 
             sf::Text loadText;
             loadText.setFont(font);
-            loadText.setString("L - LOAD GAME");
+            loadText.setString("L - KAYIT YUKLE");
             loadText.setCharacterSize(22);
             loadText.setFillColor(sf::Color::White);
             loadText.setPosition(250.f, 350.f);
 
+            sf::Text helpText;
+            helpText.setFont(font);
+            helpText.setString("H - NASIL OYNANIR");
+            helpText.setCharacterSize(22);
+            helpText.setFillColor(sf::Color::White);
+            helpText.setPosition(250.f, 400.f);
+
             sf::Text exitText;
             exitText.setFont(font);
-            exitText.setString("ESC - QUIT");
+            exitText.setString("ESC - CIKIS");
             exitText.setCharacterSize(22);
             exitText.setFillColor(sf::Color::White);
-            exitText.setPosition(270.f, 400.f);
+            exitText.setPosition(270.f, 450.f);
 
             window.draw(title);
             window.draw(startText);
             window.draw(loadText);
+            window.draw(helpText);
             window.draw(exitText);
 
              window.display();
@@ -280,6 +295,59 @@ int main() {
             continue;
         }
 
+        if (gameState == GameState::HOW_TO_PLAY) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
+            gameState = GameState::MENU;
+        }
+
+        window.clear(sf::Color(10, 10, 20));
+
+        sf::Text title;
+        title.setFont(font);
+        title.setString("HOW TO PLAY");
+        title.setCharacterSize(36);
+        title.setFillColor(sf::Color(180, 180, 255));
+        title.setPosition(250.f, 60.f);
+
+        sf::Text controls;
+        controls.setFont(font);
+        controls.setCharacterSize(18);
+        controls.setFillColor(sf::Color::White);
+        controls.setString(
+            "W A S D  - Hareket\n"
+            "SPACE    - Saldiri\n"
+            "LEFT SHIFT - Rogue Dash\n"
+            "ENTER    - Merdiven kullan\n"
+            "P        - Oyunu kaydet\n"
+            "L        - Oyunu yukle\n"
+            "ESC      - Menuye don\n\n"
+            "Esyalar:\n"
+            "Heart        - Can yeniler veya maksimum can arttirir\n"
+            "Speed Potion - Hareket hizini arttirir\n"
+            "Sword        - Saldiri gucunu arttirir\n"
+            "Mind Orb     - Gorus alanini arttirir\n\n"
+            "Amac:\n"
+            "Zindanlari kesfet, dusmanlari yen,\n"
+            "esyalar topla ve hayatta kal."
+        );
+
+        controls.setPosition(120.f, 130.f);
+
+        window.draw(title);
+        window.draw(controls);
+
+        sf::Text backText;
+        backText.setFont(font);
+        backText.setString("B - MENUYE DON");
+        backText.setCharacterSize(18);
+        backText.setFillColor(sf::Color(180, 180, 180));
+        backText.setPosition(240.f, 620.f);
+        window.draw(backText);
+
+        window.display();
+
+        continue;
+    }
 
         if (gameState == GameState::CHARACTER_SELECT) {
 

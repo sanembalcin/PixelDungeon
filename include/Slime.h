@@ -16,6 +16,7 @@ private:
     bool flashing;
     sf::Clock flashClock;
     std::vector<sf::Vector2i> path;
+    sf::Clock aiClock;
 
 public:
     Slime(float x, float y);
