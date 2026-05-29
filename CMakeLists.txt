@@ -16,7 +16,7 @@ include_directories(include)
 
 
 set(SFML_STATIC_LIBRARIES FALSE)
-find_package(SFML 2.5 COMPONENTS graphics window system audio REQUIRED)
+find_package(SFML 2.6 COMPONENTS graphics window system audio REQUIRED)
 
 
 add_executable(game ${SOURCES})

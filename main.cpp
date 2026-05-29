@@ -11,6 +11,10 @@
 #include <string>
 #include <memory>
 
+
+
+
+
 enum class GameState {
     MENU,
     HOW_TO_PLAY,
@@ -127,6 +131,7 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
 
 
 int main() {
+
     sf::RenderWindow window(sf::VideoMode(800, 700), "Pixel Dungeon");
     window.setFramerateLimit(60);
 
@@ -378,7 +383,7 @@ int main() {
 
             sf::Text title;
             title.setFont(font);
-            title.setString("CHOOSE YOUR CHARACTER");
+            title.setString("KARAKTERINI SEC");
             title.setCharacterSize(30);
             title.setFillColor(sf::Color::White);
             title.setPosition(120.f, 60.f);
@@ -445,7 +450,7 @@ int main() {
 
             sf::Text enterText;
             enterText.setFont(font);
-            enterText.setString("SPACE - START");
+            enterText.setString("SPACE - BASLA");
             enterText.setCharacterSize(18);
             enterText.setFillColor(sf::Color(180, 180, 255));
             enterText.setPosition(260.f, 500.f);
