@@ -74,48 +74,160 @@ void Player::setHealth(int value) {
 }
 
 void Player::drawHealthBar(sf::RenderWindow& window) {
-    sf::RectangleShape bgBar(sf::Vector2f(100.f, 10.f));
-    bgBar.setFillColor(sf::Color(50, 50, 50));
-
-    sf::RectangleShape fgBar(sf::Vector2f(100.f * (static_cast<float>(health) / maxHealth), 10.f));
-    fgBar.setFillColor(sf::Color::Red);
 
     sf::Vector2f camPos = window.getView().getCenter();
     sf::Vector2f viewSize = window.getView().getSize();
 
-    sf::Vector2f uiPos(camPos.x - viewSize.x / 2.f + 10.f, camPos.y - viewSize.y / 2.f + 10.f);
+    float left = camPos.x - viewSize.x / 2.f;
+    float top = camPos.y - viewSize.y / 2.f;
 
-    bgBar.setPosition(uiPos);
-    fgBar.setPosition(uiPos);
+    float barY = top + viewSize.y - 100.f;
 
-    window.draw(bgBar);
-    window.draw(fgBar);
+    sf::RectangleShape panel(sf::Vector2f(viewSize.x, 100.f));
+    panel.setFillColor(sf::Color(15, 15, 15, 230));
+    panel.setPosition(left, barY);
+
+    window.draw(panel);
+
+    sf::RectangleShape hpBg(sf::Vector2f(180.f, 16.f));
+    hpBg.setFillColor(sf::Color(60, 60, 60));
+    hpBg.setPosition(left + 20.f, barY + 15.f);
+
+    window.draw(hpBg);
+
+    sf::RectangleShape hpBar(
+        sf::Vector2f(
+            180.f * (static_cast<float>(health) / maxHealth),
+            16.f
+        )
+    );
+
+    hpBar.setFillColor(sf::Color::Red);
+    hpBar.setPosition(left + 20.f, barY + 15.f);
+
+    window.draw(hpBar);
 
     sf::Font font;
 
-    if (font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
-        sf::Text uiText;
-        uiText.setFont(font);
-        uiText.setCharacterSize(12);
-        uiText.setFillColor(sf::Color::White);
-
-        int pCount = 0;
-        int sCount = 0;
-        int aCount = 0;
-
-        for (auto item : inventory) {
-            if (item == ItemType::POTION) pCount++;
-            if (item == ItemType::SWORD) sCount++;
-            if (item == ItemType::ARMOR) aCount++;
-        }
-
-        std::string info = "ATK: " + std::to_string(attackPower) + " | Iksir: " + std::to_string(pCount) + " Kilic: " + std::to_string(sCount) + " Zirh: " + std::to_string(aCount);
-
-        uiText.setString(info);
-        uiText.setPosition(uiPos.x, uiPos.y + 15.f);
-
-        window.draw(uiText);
+    if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+        return;
     }
+
+    int hCount = 0;
+    int spCount = 0;
+    int sCount = 0;
+
+    for (auto item : inventory) {
+        if (item == ItemType::HEART) hCount++;
+        if (item == ItemType::SPEED) spCount++;
+        if (item == ItemType::SWORD) sCount++;
+    }
+
+    sf::Text hpText;
+    hpText.setFont(font);
+    hpText.setCharacterSize(15);
+    hpText.setFillColor(sf::Color::White);
+
+    hpText.setString(
+        "HP: " +
+        std::to_string(health) +
+        "/" +
+        std::to_string(maxHealth)
+    );
+
+    hpText.setPosition(left + 25.f, barY + 35.f);
+
+    window.draw(hpText);
+
+    sf::Texture heartTex;
+    heartTex.loadFromFile("assets/heart.png");
+
+    sf::Sprite heartSprite;
+    heartSprite.setTexture(heartTex);
+
+    sf::Vector2u heartSize = heartTex.getSize();
+
+    if (heartSize.x > 0 && heartSize.y > 0) {
+        heartSprite.setScale(
+            24.f / heartSize.x,
+            24.f / heartSize.y
+        );
+    }
+
+    heartSprite.setPosition(left + 260.f, barY + 20.f);
+
+    window.draw(heartSprite);
+
+    sf::Text heartText;
+    heartText.setFont(font);
+    heartText.setCharacterSize(18);
+    heartText.setFillColor(sf::Color::White);
+
+    heartText.setString("x " + std::to_string(hCount));
+
+    heartText.setPosition(left + 295.f, barY + 22.f);
+
+    window.draw(heartText);
+
+    sf::Texture speedTex;
+    speedTex.loadFromFile("assets/speed.png");
+
+    sf::Sprite speedSprite;
+    speedSprite.setTexture(speedTex);
+
+    sf::Vector2u speedSize = speedTex.getSize();
+
+    if (speedSize.x > 0 && speedSize.y > 0) {
+        speedSprite.setScale(
+            24.f / speedSize.x,
+            24.f / speedSize.y
+        );
+    }
+
+    speedSprite.setPosition(left + 380.f, barY + 20.f);
+
+    window.draw(speedSprite);
+
+    sf::Text speedText;
+    speedText.setFont(font);
+    speedText.setCharacterSize(18);
+    speedText.setFillColor(sf::Color::White);
+
+    speedText.setString("x " + std::to_string(spCount));
+
+    speedText.setPosition(left + 415.f, barY + 22.f);
+
+    window.draw(speedText);
+
+    sf::Texture swordTex;
+    swordTex.loadFromFile("assets/sword.png");
+
+    sf::Sprite swordSprite;
+    swordSprite.setTexture(swordTex);
+
+    sf::Vector2u swordSize = swordTex.getSize();
+
+    if (swordSize.x > 0 && swordSize.y > 0) {
+        swordSprite.setScale(
+            24.f / swordSize.x,
+            24.f / swordSize.y
+        );
+    }
+
+    swordSprite.setPosition(left + 500.f, barY + 20.f);
+
+    window.draw(swordSprite);
+
+    sf::Text swordText;
+    swordText.setFont(font);
+    swordText.setCharacterSize(18);
+    swordText.setFillColor(sf::Color::White);
+
+    swordText.setString("x " + std::to_string(sCount));
+
+    swordText.setPosition(left + 535.f, barY + 22.f);
+
+    window.draw(swordText);
 }
 
 void Player::move(float offsetX, float offsetY) {
@@ -151,14 +263,21 @@ void Player::boostDefense(float amount) {
 void Player::addToInventory(ItemType type) {
     inventory.push_back(type);
 
-    if (type == ItemType::POTION) {
-        heal(20);
+    if (type == ItemType::HEART) {
+
+    if (health < maxHealth) {
+        heal(10);
+    }
+    else {
+        maxHealth += 10;
+        health = maxHealth;
+    }
+    }
+    else if (type == ItemType::SPEED) {
+        speed += 0.5f;
     }
     else if (type == ItemType::SWORD) {
         boostAttack(5);
-    }
-    else if (type == ItemType::ARMOR) {
-        boostDefense(0.1f);
     }
 }
 
@@ -263,6 +382,11 @@ void Warrior::handleInput(const DungeonMap& map) {
                     return;
                 }
             }
+        }
+
+        if (sprite.getPosition().y + sprite.getGlobalBounds().height > 600.f) {
+            sprite.setPosition(oldPos);
+            return;
         }
     }
 }
@@ -401,6 +525,11 @@ void Rogue::handleInput(const DungeonMap& map) {
                     return;
                 }
             }
+        }
+
+        if (sprite.getPosition().y + sprite.getGlobalBounds().height > 600.f) {
+            sprite.setPosition(oldPos);
+            return;
         }
     }
 }

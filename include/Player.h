@@ -6,9 +6,9 @@
 #include <vector>
 
 enum class ItemType {
-    POTION,
-    SWORD,
-    ARMOR
+    HEART,
+    SPEED,
+    SWORD
 };
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
@@ -48,6 +48,8 @@ public:
     void boostAttack(int amount);
     void boostDefense(float amount);
     void addToInventory(ItemType type);
+    int getPotionCount() const;
+    int getSwordCount() const;
     virtual void die();
 };
 

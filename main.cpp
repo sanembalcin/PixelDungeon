@@ -20,26 +20,51 @@ enum class GameState {
 };
 
 sf::Vector2f findFirstFloorTile(DungeonMap& map) {
-    for (int y = 0; y < MAP_HEIGHT; ++y) {
-        for (int x = 0; x < MAP_WIDTH; ++x) {
-            if (map.grid[y][x] == 0) {
-                return sf::Vector2f(x * TILE_SIZE, y * TILE_SIZE);
+    for (int y = 2; y < MAP_HEIGHT - 2; ++y) {
+        for (int x = 2; x < MAP_WIDTH - 2; ++x) {
+            if (map.grid[y][x] == 0 &&
+                map.grid[y - 1][x] == 0 &&
+                map.grid[y + 1][x] == 0 &&
+                map.grid[y][x - 1] == 0 &&
+                map.grid[y][x + 1] == 0 &&
+                map.grid[y - 1][x - 1] == 0 &&
+                map.grid[y - 1][x + 1] == 0 &&
+                map.grid[y + 1][x - 1] == 0 &&
+                map.grid[y + 1][x + 1] == 0) {
+
+                return sf::Vector2f(
+                    x * TILE_SIZE + 8.f,
+                    y * TILE_SIZE + 8.f
+                );
             }
         }
     }
-    return sf::Vector2f(100.f, 100.f);
+
+    return sf::Vector2f(3 * TILE_SIZE + 8.f, 3 * TILE_SIZE + 8.f);
 }
 
 sf::Vector2f findLastFloorTile(DungeonMap& map) {
-    for (int y = MAP_HEIGHT - 1; y >= 0; --y) {
-        for (int x = MAP_WIDTH - 1; x >= 0; --x) {
-            if (map.grid[y][x] == 0) {
-                return sf::Vector2f(x * TILE_SIZE, y * TILE_SIZE);
+    for (int y = MAP_HEIGHT - 2; y >= 1; --y) {
+        for (int x = MAP_WIDTH - 2; x >= 1; --x) {
+            if (map.grid[y][x] == 0 &&
+                map.grid[y - 1][x] == 0 &&
+                map.grid[y + 1][x] == 0 &&
+                map.grid[y][x - 1] == 0 &&
+                map.grid[y][x + 1] == 0) {
+
+                return sf::Vector2f(
+                    x * TILE_SIZE + 8.f,
+                    y * TILE_SIZE + 8.f
+                );
             }
         }
     }
+
     return sf::Vector2f(400.f, 300.f);
 }
+
+    
+
 
 sf::Vector2f findMiddleFloorTile(DungeonMap& map) {
     for (int y = MAP_HEIGHT / 2; y < MAP_HEIGHT; ++y) {
@@ -56,31 +81,31 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
     worldItems.clear();
 
     int itemCounter = 0;
-    int potionCounter = 0;
+    int heartCounter = 0;
+    int speedCounter = 0;
     int swordCounter = 0;
-    int armorCounter = 0;
 
     for (int y = 1; y < MAP_HEIGHT - 1; ++y) {
         for (int x = 1; x < MAP_WIDTH - 1; ++x) {
             if (map.grid[y][x] == 0) {
-                if (rand() % 100 < 6 && itemCounter < 8) {
+                if (rand() % 100 < 6 && itemCounter < 9) {
                     float px = x * TILE_SIZE + 8.f;
                     float py = y * TILE_SIZE + 8.f;
                     int r = rand() % 3;
 
-                    if (r == 0 && potionCounter < 4) {
-                        worldItems.emplace_back(ItemType::POTION, px, py, "assets/potion.png");
-                        potionCounter++;
+                    if (r == 0 && heartCounter < 4) {
+                        worldItems.emplace_back(ItemType::HEART, px, py, "assets/heart.png");
+                        heartCounter++;
                         itemCounter++;
                     }
-                    else if (r == 1 && swordCounter < 2) {
+                    else if (r == 1 && speedCounter < 3) {
+                        worldItems.emplace_back(ItemType::SPEED, px, py, "assets/speed.png");
+                        speedCounter++;
+                        itemCounter++;
+                    }
+                    else if (r == 2 && swordCounter < 2) {
                         worldItems.emplace_back(ItemType::SWORD, px, py, "assets/sword.png");
                         swordCounter++;
-                        itemCounter++;
-                    }
-                    else if (r == 2 && armorCounter < 2) {
-                        worldItems.emplace_back(ItemType::ARMOR, px, py, "assets/armor.png");
-                        armorCounter++;
                         itemCounter++;
                     }
                 }
@@ -92,8 +117,10 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
     }
 }
 
+
+
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Pixel Dungeon - Savasci Surumu");
+    sf::RenderWindow window(sf::VideoMode(800, 700), "Pixel Dungeon");
     window.setFramerateLimit(60);
 
     DungeonMap map;
@@ -543,7 +570,7 @@ int main() {
             lastSlimePos = slime.getPosition();
         }
         else if (!slimePotionSpawned) {
-            worldItems.emplace_back(ItemType::POTION, lastSlimePos.x + 8.f, lastSlimePos.y + 8.f, "assets/potion.png");
+            worldItems.emplace_back(ItemType::HEART, lastSlimePos.x + 8.f, lastSlimePos.y + 8.f, "assets/heart.png");
             slimePotionSpawned = true;
         }
 
@@ -736,7 +763,7 @@ int main() {
         floorText.setCharacterSize(14);
         floorText.setFillColor(sf::Color::White);
         floorText.setString("Kat: " + std::to_string(currentFloor));
-        floorText.setPosition(10.f, 45.f);
+        floorText.setPosition(650.f, 625.f);
         window.draw(floorText);
 
         window.display();
