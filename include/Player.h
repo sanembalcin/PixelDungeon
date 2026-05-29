@@ -55,6 +55,8 @@ public:
     void boostAttack(int amount);
     void boostDefense(float amount);
     void addToInventory(ItemType type);
+    int getItemCount(ItemType type) const;
+    void setInventoryCounts(int heartCount, int speedCount, int swordCount, int mindCount);
     float getViewRadius() const;
     int getPotionCount() const;
     int getSwordCount() const;

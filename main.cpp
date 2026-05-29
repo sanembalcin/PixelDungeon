@@ -439,6 +439,12 @@ int main() {
                 saveFile << player->getAttackPower() << "\n";
                 saveFile << player->getSpeed() << "\n";
                 saveFile << player->getViewRadius() << "\n";
+
+                saveFile << player->getItemCount(ItemType::HEART) << "\n";
+                saveFile << player->getItemCount(ItemType::SPEED) << "\n";
+                saveFile << player->getItemCount(ItemType::SWORD) << "\n";
+                saveFile << player->getItemCount(ItemType::MIND) << "\n";
+
                 saveFile << currentFloor << "\n";
                 saveFile.close();
             }
@@ -455,6 +461,10 @@ int main() {
                 int atk;
                 float spd;
                 float vr;
+                int heartCount;
+                int speedCount;
+                int swordCount;
+                int mindCount;
                 int floor;
 
                 saveFile >> px >> py;
@@ -463,6 +473,10 @@ int main() {
                 saveFile >> atk;
                 saveFile >> spd;
                 saveFile >> vr;
+                saveFile >> heartCount;
+                saveFile >> speedCount;
+                saveFile >> swordCount;
+                saveFile >> mindCount;
                 saveFile >> floor;
 
                 player->setMaxHealth(maxHp);
@@ -470,6 +484,7 @@ int main() {
                 player->setAttackPower(atk);
                 player->setSpeed(spd);
                 player->setViewRadius(vr);
+                player->setInventoryCounts(heartCount, speedCount, swordCount, mindCount);
                 player->setPosition(px, py);
                 currentFloor = floor;
 
@@ -779,6 +794,15 @@ int main() {
 
         player->draw(window);
         player->drawHealthBar(window);
+
+        sf::Text floorText;
+        floorText.setFont(font);
+        floorText.setCharacterSize(15);
+        floorText.setFillColor(sf::Color::White);
+
+        floorText.setString("Kat: " + std::to_string(currentFloor));
+        floorText.setPosition(690.f, 635.f);
+        window.draw(floorText);
 
         window.display();
     }

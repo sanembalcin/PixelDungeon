@@ -209,13 +209,6 @@ void Player::drawHealthBar(sf::RenderWindow& window) {
     mindText.setPosition(left + startX + spacing * 3 + 34.f, textY);
     window.draw(mindText);
 
-    sf::Text floorText;
-    floorText.setFont(font);
-    floorText.setCharacterSize(15);
-    floorText.setFillColor(sf::Color::White);
-    floorText.setString("Kat: 1");
-    floorText.setPosition(left + 690.f, textY);
-    window.draw(floorText);
 }
 
 void Player::move(float offsetX, float offsetY) {
@@ -296,6 +289,38 @@ void Player::addToInventory(ItemType type) {
     }
     else if (type == ItemType::MIND) {
         viewRadius += 1.f * TILE_SIZE;
+    }
+}
+
+int Player::getItemCount(ItemType type) const {
+    int count = 0;
+
+    for (auto item : inventory) {
+        if (item == type) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+void Player::setInventoryCounts(int heartCount, int speedCount, int swordCount, int mindCount) {
+    inventory.clear();
+
+    for (int i = 0; i < heartCount; i++) {
+        inventory.push_back(ItemType::HEART);
+    }
+
+    for (int i = 0; i < speedCount; i++) {
+        inventory.push_back(ItemType::SPEED);
+    }
+
+    for (int i = 0; i < swordCount; i++) {
+        inventory.push_back(ItemType::SWORD);
+    }
+
+    for (int i = 0; i < mindCount; i++) {
+        inventory.push_back(ItemType::MIND);
     }
 }
 
