@@ -465,6 +465,7 @@ Rogue::Rogue() : Player() {
     atkRight.loadFromFile("assets/rogue_attack_right.png");
 
     deadTexture.loadFromFile("assets/rogue_dead.png");
+    shadowTexture.loadFromFile("assets/rogue_shadow_trail.png");
 
     sprite.setTexture(texDown);
 
@@ -499,8 +500,10 @@ void Rogue::handleInput(const DungeonMap& map) {
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
         currentSpeed = 9.f;
+        if (!isDashing){
         isDashing = true;
         dashClock.restart();
+        }
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
@@ -590,9 +593,35 @@ void Rogue::update(const DungeonMap& map) {
     if (isDashing && dashClock.getElapsedTime().asSeconds() >= dashDuration) {
         isDashing = false;
     }
+
+    if (isDashing && shadowSpawnClock.getElapsedTime().asSeconds() >= 0.04f) {
+    ShadowTrail shadow;
+    shadow.sprite.setTexture(*sprite.getTexture());
+    shadow.sprite.setPosition(sprite.getPosition());
+    shadow.sprite.setScale(sprite.getScale());
+    shadow.sprite.setColor(sf::Color(120, 120, 255, 120));
+
+    shadows.push_back(shadow);
+    shadowSpawnClock.restart();
+}
+
+    for (size_t i = 0; i < shadows.size();) {
+        if (shadows[i].clock.getElapsedTime().asSeconds() > 0.25f) {
+            shadows.erase(shadows.begin() + i);
+        }
+        else {
+            sf::Color c = shadows[i].sprite.getColor();
+            c.a = static_cast<sf::Uint8>(120 * (1.f - shadows[i].clock.getElapsedTime().asSeconds() / 0.25f));
+            shadows[i].sprite.setColor(c);
+            i++;
+        }
+    }
 }
 
 void Rogue::draw(sf::RenderWindow& window) {
+    for (size_t i = 0; i < shadows.size(); ++i) {
+        window.draw(shadows[i].sprite);
+    }
     Player::draw(window);
 }
 

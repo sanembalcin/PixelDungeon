@@ -91,6 +91,13 @@ public:
 
 class Rogue : public Player {
 private:
+    sf::Texture shadowTexture;
+    struct ShadowTrail {
+    sf::Sprite sprite;
+    sf::Clock clock;
+    };
+    std::vector<ShadowTrail> shadows;
+    sf::Clock shadowSpawnClock;
     sf::Texture texUp;
     sf::Texture texDown;
     sf::Texture texLeft;
@@ -107,6 +114,7 @@ private:
     bool isDashing;
     sf::Clock dashClock;
     float dashDuration;
+    
 
 public:
     Rogue();

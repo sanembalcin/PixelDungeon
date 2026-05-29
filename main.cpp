@@ -185,6 +185,57 @@ int main() {
                 gameState = GameState::CHARACTER_SELECT;
             }
 
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
+                std::ifstream saveFile("save.txt");
+
+                if (saveFile.is_open()) {
+                    float px;
+                    float py;
+                    int hp;
+                    int maxHp;
+                    int atk;
+                    float spd;
+                    float vr;
+                    int heartCount;
+                    int speedCount;
+                    int swordCount;
+                    int mindCount;
+                    int floor;
+
+                    saveFile >> px >> py;
+                    saveFile >> hp;
+                    saveFile >> maxHp;
+                    saveFile >> atk;
+                    saveFile >> spd;
+                    saveFile >> vr;
+                    saveFile >> heartCount;
+                    saveFile >> speedCount;
+                    saveFile >> swordCount;
+                    saveFile >> mindCount;
+                    saveFile >> floor;
+
+                    for (int y = 0; y < MAP_HEIGHT; y++) {
+                        for (int x = 0; x < MAP_WIDTH; x++) {
+                            saveFile >> map.grid[y][x];
+                        }
+                    }
+
+                    player->setMaxHealth(maxHp);
+                    player->setHealth(hp);
+                    player->setAttackPower(atk);
+                    player->setSpeed(spd);
+                    player->setViewRadius(vr);
+                    player->setInventoryCounts(heartCount, speedCount, swordCount, mindCount);
+                    player->setPosition(px, py);
+
+                    currentFloor = floor;
+
+                    gameState = GameState::PLAYING;
+
+                    saveFile.close();
+                }
+            }
+
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
                 window.close();
             }
@@ -200,20 +251,28 @@ int main() {
 
             sf::Text startText;
             startText.setFont(font);
-            startText.setString("ENTER - START");
+            startText.setString("ENTER - NEW GAME");
             startText.setCharacterSize(22);
             startText.setFillColor(sf::Color::White);
             startText.setPosition(250.f, 300.f);
+
+            sf::Text loadText;
+            loadText.setFont(font);
+            loadText.setString("L - LOAD GAME");
+            loadText.setCharacterSize(22);
+            loadText.setFillColor(sf::Color::White);
+            loadText.setPosition(250.f, 350.f);
 
             sf::Text exitText;
             exitText.setFont(font);
             exitText.setString("ESC - QUIT");
             exitText.setCharacterSize(22);
             exitText.setFillColor(sf::Color::White);
-            exitText.setPosition(270.f, 350.f);
+            exitText.setPosition(270.f, 400.f);
 
             window.draw(title);
             window.draw(startText);
+            window.draw(loadText);
             window.draw(exitText);
 
              window.display();
@@ -446,6 +505,13 @@ int main() {
                 saveFile << player->getItemCount(ItemType::MIND) << "\n";
 
                 saveFile << currentFloor << "\n";
+                for (int y = 0; y < MAP_HEIGHT; y++) {
+                    for (int x = 0; x < MAP_WIDTH; x++) {
+                        saveFile << map.grid[y][x] << " ";
+                    }
+                    saveFile << "\n";
+                }
+
                 saveFile.close();
             }
         }
@@ -479,13 +545,60 @@ int main() {
                 saveFile >> mindCount;
                 saveFile >> floor;
 
+                for (int y = 0; y < MAP_HEIGHT; y++) {
+                    for (int x = 0; x < MAP_WIDTH; x++) {
+                        saveFile >> map.grid[y][x];
+                    }
+                }
+
                 player->setMaxHealth(maxHp);
                 player->setHealth(hp);
                 player->setAttackPower(atk);
                 player->setSpeed(spd);
                 player->setViewRadius(vr);
                 player->setInventoryCounts(heartCount, speedCount, swordCount, mindCount);
-                player->setPosition(px, py);
+                int tileX = static_cast<int>((px + 16.f) / TILE_SIZE);
+                int tileY = static_cast<int>((py + 16.f) / TILE_SIZE);
+
+                if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT && map.grid[tileY][tileX] != 1) {
+                    float hitboxLeft = px + 10.f;
+float hitboxTop = py + 14.f;
+float hitboxWidth = 12.f;
+float hitboxHeight = 14.f;
+
+int leftTile = static_cast<int>(hitboxLeft / TILE_SIZE);
+int rightTile = static_cast<int>((hitboxLeft + hitboxWidth) / TILE_SIZE);
+int topTile = static_cast<int>(hitboxTop / TILE_SIZE);
+int bottomTile = static_cast<int>((hitboxTop + hitboxHeight) / TILE_SIZE);
+
+bool safePosition = true;
+
+if (leftTile < 0 || rightTile >= MAP_WIDTH || topTile < 0 || bottomTile >= MAP_HEIGHT) {
+    safePosition = false;
+}
+else {
+    for (int y = topTile; y <= bottomTile; ++y) {
+        for (int x = leftTile; x <= rightTile; ++x) {
+            if (map.grid[y][x] == 1) {
+                safePosition = false;
+            }
+        }
+    }
+}
+
+if (safePosition) {
+    player->setPosition(px, py);
+}
+else {
+    sf::Vector2f safePos = findFirstFloorTile(map);
+    player->setPosition(safePos.x, safePos.y);
+}
+                }
+                else {
+                    sf::Vector2f safePos = findFirstFloorTile(map);
+                    player->setPosition(safePos.x, safePos.y);
+                }
+
                 currentFloor = floor;
 
                 if (currentFloor >= 2) {
