@@ -22,7 +22,7 @@ public:
 
     void update(const sf::Vector2f& playerPos, const DungeonMap& map);
     void draw(sf::RenderWindow& window);
-
+    void reset(float x, float y);
     sf::Vector2f getPosition() const;
     sf::FloatRect getBounds() const;
     void takeDamage(int amount);

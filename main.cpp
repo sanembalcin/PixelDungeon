@@ -14,7 +14,9 @@
 enum class GameState {
     MENU,
     CHARACTER_SELECT,
-    PLAYING
+    PLAYING,
+    PLAYER_DEAD,
+    GAME_OVER
 };
 
 sf::Vector2f findFirstFloorTile(DungeonMap& map) {
@@ -120,6 +122,7 @@ int main() {
     sf::Vector2f lastSlimePos(0.f, 0.f);
     sf::Clock trapClock;
     sf::Clock playerAttackClock;
+    sf::Clock deathClock;
 
     bool pWasPressed = false;
     bool lWasPressed = false;
@@ -183,7 +186,212 @@ int main() {
              window.display();
 
             continue;
-}
+        }
+
+
+        if (gameState == GameState::CHARACTER_SELECT) {
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) {
+                selectedCharacter = 0;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) {
+                selectedCharacter = 1;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+
+                if (selectedCharacter == 0) {
+                    player = std::make_unique<Warrior>();
+             }
+
+                else {
+                    player = std::make_unique<Rogue>();
+                }
+
+            player->setPosition(playerStart.x, playerStart.y);
+
+            gameState = GameState::PLAYING;
+            }
+
+            window.clear(sf::Color(15, 15, 25));
+
+            sf::Text title;
+            title.setFont(font);
+            title.setString("CHOOSE YOUR CHARACTER");
+            title.setCharacterSize(30);
+            title.setFillColor(sf::Color::White);
+            title.setPosition(120.f, 60.f);
+
+            sf::Texture warriorPreviewTex;
+            warriorPreviewTex.loadFromFile("assets/warrior_down.png");
+
+            sf::Sprite warriorPreview;
+            warriorPreview.setTexture(warriorPreviewTex);
+
+            sf::Vector2u wSize = warriorPreviewTex.getSize();
+
+            if (wSize.x > 0 && wSize.y > 0) {
+
+                warriorPreview.setScale(
+                96.f / wSize.x,
+                96.f / wSize.y
+                );
+            }
+
+            warriorPreview.setPosition(180.f, 220.f);
+
+            sf::Texture roguePreviewTex;
+            roguePreviewTex.loadFromFile("assets/rogue_down.png");
+
+            sf::Sprite roguePreview;
+            roguePreview.setTexture(roguePreviewTex);
+
+            sf::Vector2u rSize = roguePreviewTex.getSize();
+
+            if (rSize.x > 0 && rSize.y > 0) {
+
+                roguePreview.setScale(
+                96.f / rSize.x,
+                96.f / rSize.y
+                );
+            }
+
+            roguePreview.setPosition(500.f, 220.f);
+
+            if (selectedCharacter == 0) {
+                warriorPreview.setColor(sf::Color::White);
+                roguePreview.setColor(sf::Color(120, 120, 120));
+            }
+
+            else {
+                roguePreview.setColor(sf::Color::White);
+                warriorPreview.setColor(sf::Color(120, 120, 120));
+            }
+
+            sf::Text warriorText;
+            warriorText.setFont(font);
+            warriorText.setString("1 - WARRIOR");
+            warriorText.setCharacterSize(18);
+            warriorText.setFillColor(sf::Color::White);
+            warriorText.setPosition(150.f, 360.f);
+
+            sf::Text rogueText;
+            rogueText.setFont(font);
+            rogueText.setString("2 - ROGUE");
+            rogueText.setCharacterSize(18);
+            rogueText.setFillColor(sf::Color::White);
+            rogueText.setPosition(500.f, 360.f);
+
+            sf::Text enterText;
+            enterText.setFont(font);
+            enterText.setString("SPACE - START");
+            enterText.setCharacterSize(18);
+            enterText.setFillColor(sf::Color(180, 180, 255));
+            enterText.setPosition(260.f, 500.f);
+
+            window.draw(title);
+
+            window.draw(warriorPreview);
+            window.draw(roguePreview);
+
+            window.draw(warriorText);
+            window.draw(rogueText);
+            window.draw(enterText);
+
+            window.display();
+
+            continue;
+        }
+
+        if (gameState == GameState::PLAYER_DEAD) {
+            window.clear(sf::Color(10, 0, 0));
+
+            map.draw(window, player->getPosition());
+            player->draw(window);
+
+            if (deathClock.getElapsedTime().asSeconds() >= 1.5f) {
+                gameState = GameState::GAME_OVER;
+            }
+
+            window.display();
+
+            continue;
+        }
+
+        if (gameState == GameState::GAME_OVER) {
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+                window.close();
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+
+                currentFloor = 1;
+
+                map.generateNewMap();
+
+                spawnItemsAndTraps(map, worldItems);
+
+                if (selectedCharacter == 0) {
+                    player = std::make_unique<Warrior>();
+                }
+
+                else {
+                    player = std::make_unique<Rogue>();
+                }
+
+                sf::Vector2f newPlayerPos = findFirstFloorTile(map);
+                sf::Vector2f newSlimePos = findLastFloorTile(map);
+
+                player->setPosition(newPlayerPos.x, newPlayerPos.y);
+
+                slime.reset(newSlimePos.x, newSlimePos.y);
+
+                skeleton.setPosition(-9999.f, -9999.f);
+
+                mage = MageEnemy(-9999.f, -9999.f);
+
+                slimePotionSpawned = false;
+
+                gameState = GameState::PLAYING;
+            }
+
+            window.clear(sf::Color(10, 0, 0));
+
+            player->draw(window);
+
+            sf::Text overText;
+            overText.setFont(font);
+            overText.setString("GAME OVER");
+            overText.setCharacterSize(52);
+            overText.setFillColor(sf::Color(220, 40, 40));
+            overText.setPosition(170.f, 160.f);
+
+            sf::Text retryText;
+            retryText.setFont(font);
+            retryText.setString("R - RESTART");
+            retryText.setCharacterSize(24);
+            retryText.setFillColor(sf::Color::White);
+            retryText.setPosition(250.f, 330.f);
+
+            sf::Text exitText;
+            exitText.setFont(font);
+            exitText.setString("ESC - QUIT");
+            exitText.setCharacterSize(24);
+            exitText.setFillColor(sf::Color::White);
+            exitText.setPosition(270.f, 380.f);
+
+            window.draw(overText);
+
+            window.draw(retryText);
+
+            window.draw(exitText);
+
+            window.display();
+
+            continue;
+    }
 
         bool pPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::P);
         bool lPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::L);
@@ -239,8 +447,16 @@ int main() {
         pWasPressed = pPressed;
         lWasPressed = lPressed;
 
+        if (gameState != GameState::PLAYING)
+        continue;
+
         player->handleInput(map);
         player->update(map);
+        if (player->getHealth() <= 0) {
+            player->die();
+            deathClock.restart();
+            gameState = GameState::PLAYER_DEAD;
+        }
 
         int pTileX = static_cast<int>((player->getPosition().x + 16.f) / TILE_SIZE);
         int pTileY = static_cast<int>((player->getPosition().y + 16.f) / TILE_SIZE);
@@ -259,6 +475,7 @@ int main() {
 
                     map.generateNewMap();
                     spawnItemsAndTraps(map, worldItems);
+                    map.placeStairs(currentFloor > 1);
 
                     sf::Vector2f newPlayerPos = findFirstFloorTile(map);
                     sf::Vector2f newSlimePos = findLastFloorTile(map);
@@ -266,7 +483,7 @@ int main() {
                     sf::Vector2f newMagePos = findMiddleFloorTile(map);
 
                     player->setPosition(newPlayerPos.x, newPlayerPos.y);
-                    slime.setPosition(newSlimePos.x, newSlimePos.y);
+                    slime.reset(newSlimePos.x, newSlimePos.y);
 
                     if (currentFloor >= 2) {
                         skeleton = Skeleton(newSkeletonPos.x, newSkeletonPos.y);
@@ -285,8 +502,42 @@ int main() {
                     slimePotionSpawned = false;
                 }
             }
-        }
 
+        if (map.grid[pTileY][pTileX] == 5) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && currentFloor > 1) {
+                currentFloor--;
+
+                map.generateNewMap();
+                spawnItemsAndTraps(map, worldItems);
+                map.placeStairs(currentFloor > 1);
+
+                sf::Vector2f newPlayerPos = findFirstFloorTile(map);
+                sf::Vector2f newSlimePos = findLastFloorTile(map);
+                sf::Vector2f newSkeletonPos = findMiddleFloorTile(map);
+                sf::Vector2f newMagePos = findMiddleFloorTile(map);
+
+                player->setPosition(newPlayerPos.x, newPlayerPos.y);
+                slime.reset(newSlimePos.x, newSlimePos.y);
+
+                if (currentFloor >= 2) {
+                    skeleton = Skeleton(newSkeletonPos.x, newSkeletonPos.y);
+                }
+                else {
+                    skeleton.setPosition(-9999.f, -9999.f);
+                }
+
+                if (currentFloor >= 3) {
+                    mage = MageEnemy(newMagePos.x, newMagePos.y);
+                }
+                else {
+                    mage = MageEnemy(-9999.f, -9999.f);
+                }
+
+            slimePotionSpawned = false;
+            }
+        }      
+
+        }
         if (!slime.isDead()) {
             slime.update(player->getPosition(), map);
             lastSlimePos = slime.getPosition();

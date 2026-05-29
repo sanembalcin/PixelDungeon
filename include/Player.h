@@ -48,6 +48,7 @@ public:
     void boostAttack(int amount);
     void boostDefense(float amount);
     void addToInventory(ItemType type);
+    virtual void die();
 };
 
 class Warrior : public Player {
@@ -64,6 +65,7 @@ private:
     float attackDuration;
     sf::Clock attackClock;
     Direction currentDir;
+    sf::Texture deadTexture;
 
 public:
     Warrior();
@@ -71,6 +73,7 @@ public:
     void update(const DungeonMap& map) override;
     void draw(sf::RenderWindow& window) override;
     bool getIsAttacking() const override;
+    void die() override;
 };
 
 class Rogue : public Player {
@@ -98,6 +101,7 @@ public:
     void update(const DungeonMap& map) override;
     void draw(sf::RenderWindow& window) override;
     bool getIsAttacking() const override;
+    void die() override;
 };
 
 #endif

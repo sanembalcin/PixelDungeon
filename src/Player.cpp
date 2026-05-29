@@ -17,6 +17,9 @@ void Player::handleInput(const DungeonMap& map) {
 void Player::update(const DungeonMap& map) {
 }
 
+void Player::die() {
+}
+
 void Player::draw(sf::RenderWindow& window) {
     if (damageFlash && flashClock.getElapsedTime().asSeconds() >= 0.15f) {
         sprite.setColor(sf::Color::White);
@@ -169,6 +172,7 @@ Warrior::Warrior() : Player() {
     atkDown.loadFromFile("assets/warrior_attack_down.png");
     atkLeft.loadFromFile("assets/warrior_attack_left.png");
     atkRight.loadFromFile("assets/warrior_attack_right.png");
+    deadTexture.loadFromFile("assets/warrior_dead.png");
 
     sprite.setTexture(texDown);
 
@@ -422,4 +426,34 @@ void Rogue::draw(sf::RenderWindow& window) {
 
 bool Rogue::getIsAttacking() const {
     return isAttacking;
+}
+
+void Warrior::die() {
+
+    sprite.setTexture(deadTexture);
+
+    sf::Vector2u size = deadTexture.getSize();
+
+    if (size.x > 0 && size.y > 0) {
+
+        sprite.setScale(
+            32.f / size.x,
+            32.f / size.y
+        );
+    }
+}
+
+void Rogue::die() {
+
+    sprite.setTexture(deadTexture);
+
+    sf::Vector2u size = deadTexture.getSize();
+
+    if (size.x > 0 && size.y > 0) {
+
+        sprite.setScale(
+            32.f / size.x,
+            32.f / size.y
+        );
+    }
 }

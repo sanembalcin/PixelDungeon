@@ -27,14 +27,16 @@ private:
     sf::Texture crackedFloorTexture;
     sf::Texture mossFloorTexture;
     sf::Texture trapTexture;
-    sf::Texture stairTexture;
+    sf::Texture stairsDownTexture;
+    sf::Texture stairsUpTexture;
 
     sf::Sprite wallSprite;
     sf::Sprite floorSprite;
     sf::Sprite crackedFloorSprite;
     sf::Sprite mossFloorSprite;
     sf::Sprite trapSprite;
-    sf::Sprite stairSprite;
+    sf::Sprite stairsDownSprite;
+    sf::Sprite stairsUpSprite;
 
     void freeTree(BspNode* node);
     bool splitNode(BspNode* node);
@@ -47,8 +49,9 @@ public:
     DungeonMap();
     ~DungeonMap();
     void generateNewMap();
-    void placeStairs();
+    void placeStairs(bool hasUpStairs);
     void draw(sf::RenderWindow& window, const sf::Vector2f& playerPos);
+    
 };
 
 #endif

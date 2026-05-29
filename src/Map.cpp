@@ -37,14 +37,16 @@ DungeonMap::DungeonMap() {
     crackedFloorTexture.loadFromFile("assets/cracked_floor.png");
     mossFloorTexture.loadFromFile("assets/moss_floor.png");
     trapTexture.loadFromFile("assets/trap.png");
-    stairTexture.loadFromFile("assets/stairs.png");
+    stairsDownTexture.loadFromFile("assets/stairs_down.png");
+    stairsUpTexture.loadFromFile("assets/stairs_up.png");
 
     setTileSprite(wallSprite, wallTexture, 1, 1);
     setTileSprite(floorSprite, floorTexture, 1, 1);
     setTileSprite(crackedFloorSprite, crackedFloorTexture, 1, 1);
     setTileSprite(mossFloorSprite, mossFloorTexture, 1, 1);
     setFullSprite(trapSprite, trapTexture);
-    setFullSprite(stairSprite, stairTexture);
+    setFullSprite(stairsDownSprite, stairsDownTexture);
+    setFullSprite(stairsUpSprite, stairsUpTexture);
 
     root = nullptr;
 
@@ -129,20 +131,32 @@ void DungeonMap::generateNewMap() {
         createCorridor(allRooms[i], allRooms[i + 1]);
     }
 
-    placeStairs();
+    placeStairs(false);
 }
 
-void DungeonMap::placeStairs() {
+void DungeonMap::placeStairs(bool hasUpStairs) {
+    bool downPlaced = false;
+    bool upPlaced = false;
 
-    while (true) {
-
+    while (!downPlaced) {
         int x = rand() % MAP_WIDTH;
         int y = rand() % MAP_HEIGHT;
 
         if (grid[y][x] == 0) {
-
             grid[y][x] = 4;
-            break;
+            downPlaced = true;
+        }
+    }
+
+    if (hasUpStairs) {
+        while (!upPlaced) {
+            int x = rand() % MAP_WIDTH;
+            int y = rand() % MAP_HEIGHT;
+
+            if (grid[y][x] == 0) {
+                grid[y][x] = 5;
+                upPlaced = true;
+            }
         }
     }
 }
@@ -349,9 +363,12 @@ void DungeonMap::draw(sf::RenderWindow& window, const sf::Vector2f& playerPos) {
                     }
 
                     else if (grid[y][x] == 4) {
-
-                        stairSprite.setPosition(tilePos);
-                        window.draw(stairSprite);
+                        stairsDownSprite.setPosition(tilePos);
+                        window.draw(stairsDownSprite);
+                    }
+                    else if (grid[y][x] == 5) {
+                        stairsUpSprite.setPosition(tilePos);
+                        window.draw(stairsUpSprite);
                     }
                 }
             }

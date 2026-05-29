@@ -182,3 +182,11 @@ bool Slime::isDead() const {
 void Slime::setPosition(float x, float y) {
     sprite.setPosition(x, y);
 }
+
+void Slime::reset(float x, float y) {
+    health = 100;
+    dead = false;
+    flashing = false;
+    sprite.setColor(sf::Color::White);
+    sprite.setPosition(x, y);
+}
