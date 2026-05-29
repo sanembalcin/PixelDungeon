@@ -7,8 +7,9 @@ Player::Player() {
     health = maxHealth;
     damageCooldown = 1.0f;
     damageFlash = false;
-    attackPower = 10;
+    attackPower = 15;
     damageReduction = 0.0f;
+    viewRadius = 5.f * TILE_SIZE;
 }
 
 void Player::handleInput(const DungeonMap& map) {
@@ -74,160 +75,147 @@ void Player::setHealth(int value) {
 }
 
 void Player::drawHealthBar(sf::RenderWindow& window) {
-
     sf::Vector2f camPos = window.getView().getCenter();
     sf::Vector2f viewSize = window.getView().getSize();
 
     float left = camPos.x - viewSize.x / 2.f;
     float top = camPos.y - viewSize.y / 2.f;
-
     float barY = top + viewSize.y - 100.f;
 
     sf::RectangleShape panel(sf::Vector2f(viewSize.x, 100.f));
     panel.setFillColor(sf::Color(15, 15, 15, 230));
     panel.setPosition(left, barY);
-
     window.draw(panel);
 
-    sf::RectangleShape hpBg(sf::Vector2f(180.f, 16.f));
-    hpBg.setFillColor(sf::Color(60, 60, 60));
-    hpBg.setPosition(left + 20.f, barY + 15.f);
-
-    window.draw(hpBg);
-
-    sf::RectangleShape hpBar(
-        sf::Vector2f(
-            180.f * (static_cast<float>(health) / maxHealth),
-            16.f
-        )
-    );
-
-    hpBar.setFillColor(sf::Color::Red);
-    hpBar.setPosition(left + 20.f, barY + 15.f);
-
-    window.draw(hpBar);
-
     sf::Font font;
-
     if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
         return;
     }
 
+    float rowY = barY + 38.f;
+
+    sf::RectangleShape hpBg(sf::Vector2f(120.f, 16.f));
+    hpBg.setFillColor(sf::Color(60, 60, 60));
+    hpBg.setPosition(left + 20.f, rowY);
+    window.draw(hpBg);
+
+    float hpRatio = static_cast<float>(health) / static_cast<float>(maxHealth);
+    if (hpRatio < 0.f) hpRatio = 0.f;
+    if (hpRatio > 1.f) hpRatio = 1.f;
+
+    sf::RectangleShape hpBar(sf::Vector2f(120.f * hpRatio, 16.f));
+    hpBar.setFillColor(sf::Color(220, 30, 30));
+    hpBar.setPosition(left + 20.f, rowY);
+    window.draw(hpBar);
+
+    sf::Text hpText;
+    hpText.setFont(font);
+    hpText.setCharacterSize(14);
+    hpText.setFillColor(sf::Color::White);
+    hpText.setString("HP: " + std::to_string(health) + "/" + std::to_string(maxHealth));
+    hpText.setPosition(left + 150.f, rowY - 2.f);
+    window.draw(hpText);
+
     int hCount = 0;
     int spCount = 0;
     int sCount = 0;
+    int mCount = 0;
 
     for (auto item : inventory) {
         if (item == ItemType::HEART) hCount++;
         if (item == ItemType::SPEED) spCount++;
         if (item == ItemType::SWORD) sCount++;
+        if (item == ItemType::MIND) mCount++;
     }
 
-    sf::Text hpText;
-    hpText.setFont(font);
-    hpText.setCharacterSize(15);
-    hpText.setFillColor(sf::Color::White);
-
-    hpText.setString(
-        "HP: " +
-        std::to_string(health) +
-        "/" +
-        std::to_string(maxHealth)
-    );
-
-    hpText.setPosition(left + 25.f, barY + 35.f);
-
-    window.draw(hpText);
+    float startX = 280.f;
+    float spacing = 100.f;
+    float iconY = rowY - 4.f;
+    float textY = rowY - 2.f;
 
     sf::Texture heartTex;
     heartTex.loadFromFile("assets/heart.png");
-
     sf::Sprite heartSprite;
     heartSprite.setTexture(heartTex);
-
     sf::Vector2u heartSize = heartTex.getSize();
-
     if (heartSize.x > 0 && heartSize.y > 0) {
-        heartSprite.setScale(
-            24.f / heartSize.x,
-            24.f / heartSize.y
-        );
+        heartSprite.setScale(24.f / heartSize.x, 24.f / heartSize.y);
     }
-
-    heartSprite.setPosition(left + 260.f, barY + 20.f);
-
+    heartSprite.setPosition(left + startX, iconY);
     window.draw(heartSprite);
 
     sf::Text heartText;
     heartText.setFont(font);
-    heartText.setCharacterSize(18);
+    heartText.setCharacterSize(15);
     heartText.setFillColor(sf::Color::White);
-
     heartText.setString("x " + std::to_string(hCount));
-
-    heartText.setPosition(left + 295.f, barY + 22.f);
-
+    heartText.setPosition(left + startX + 34.f, textY);
     window.draw(heartText);
 
     sf::Texture speedTex;
     speedTex.loadFromFile("assets/speed.png");
-
     sf::Sprite speedSprite;
     speedSprite.setTexture(speedTex);
-
     sf::Vector2u speedSize = speedTex.getSize();
-
     if (speedSize.x > 0 && speedSize.y > 0) {
-        speedSprite.setScale(
-            24.f / speedSize.x,
-            24.f / speedSize.y
-        );
+        speedSprite.setScale(24.f / speedSize.x, 24.f / speedSize.y);
     }
-
-    speedSprite.setPosition(left + 380.f, barY + 20.f);
-
+    speedSprite.setPosition(left + startX + spacing, iconY);
     window.draw(speedSprite);
 
     sf::Text speedText;
     speedText.setFont(font);
-    speedText.setCharacterSize(18);
+    speedText.setCharacterSize(15);
     speedText.setFillColor(sf::Color::White);
-
     speedText.setString("x " + std::to_string(spCount));
-
-    speedText.setPosition(left + 415.f, barY + 22.f);
-
+    speedText.setPosition(left + startX + spacing + 34.f, textY);
     window.draw(speedText);
 
     sf::Texture swordTex;
     swordTex.loadFromFile("assets/sword.png");
-
     sf::Sprite swordSprite;
     swordSprite.setTexture(swordTex);
-
     sf::Vector2u swordSize = swordTex.getSize();
-
     if (swordSize.x > 0 && swordSize.y > 0) {
-        swordSprite.setScale(
-            24.f / swordSize.x,
-            24.f / swordSize.y
-        );
+        swordSprite.setScale(24.f / swordSize.x, 24.f / swordSize.y);
     }
-
-    swordSprite.setPosition(left + 500.f, barY + 20.f);
-
+    swordSprite.setPosition(left + startX + spacing * 2, iconY);
     window.draw(swordSprite);
 
     sf::Text swordText;
     swordText.setFont(font);
-    swordText.setCharacterSize(18);
+    swordText.setCharacterSize(15);
     swordText.setFillColor(sf::Color::White);
-
     swordText.setString("x " + std::to_string(sCount));
-
-    swordText.setPosition(left + 535.f, barY + 22.f);
-
+    swordText.setPosition(left + startX + spacing * 2 + 34.f, textY);
     window.draw(swordText);
+
+    sf::Texture mindTex;
+    mindTex.loadFromFile("assets/mind.png");
+    sf::Sprite mindSprite;
+    mindSprite.setTexture(mindTex);
+    sf::Vector2u mindSize = mindTex.getSize();
+    if (mindSize.x > 0 && mindSize.y > 0) {
+        mindSprite.setScale(24.f / mindSize.x, 24.f / mindSize.y);
+    }
+    mindSprite.setPosition(left + startX + spacing * 3, iconY);
+    window.draw(mindSprite);
+
+    sf::Text mindText;
+    mindText.setFont(font);
+    mindText.setCharacterSize(15);
+    mindText.setFillColor(sf::Color::White);
+    mindText.setString("x " + std::to_string(mCount));
+    mindText.setPosition(left + startX + spacing * 3 + 34.f, textY);
+    window.draw(mindText);
+
+    sf::Text floorText;
+    floorText.setFont(font);
+    floorText.setCharacterSize(15);
+    floorText.setFillColor(sf::Color::White);
+    floorText.setString("Kat: 1");
+    floorText.setPosition(left + 690.f, textY);
+    window.draw(floorText);
 }
 
 void Player::move(float offsetX, float offsetY) {
@@ -253,6 +241,14 @@ void Player::boostAttack(int amount) {
     attackPower += amount;
 }
 
+float Player::getViewRadius() const {
+    return viewRadius;
+}
+
+int Player::getAttackPower() const {
+    return attackPower;
+}
+
 void Player::boostDefense(float amount) {
     damageReduction += amount;
 
@@ -264,20 +260,22 @@ void Player::addToInventory(ItemType type) {
     inventory.push_back(type);
 
     if (type == ItemType::HEART) {
-
-    if (health < maxHealth) {
+        if (health < maxHealth) {
         heal(10);
-    }
-    else {
-        maxHealth += 10;
-        health = maxHealth;
-    }
+        }
+        else {
+            maxHealth += 10;
+            health = maxHealth;
+        }
     }
     else if (type == ItemType::SPEED) {
         speed += 0.5f;
     }
     else if (type == ItemType::SWORD) {
         boostAttack(5);
+    }
+    else if (type == ItemType::MIND) {
+        viewRadius += 0.5f * TILE_SIZE;
     }
 }
 

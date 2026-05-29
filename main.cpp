@@ -84,6 +84,7 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
     int heartCounter = 0;
     int speedCounter = 0;
     int swordCounter = 0;
+    int mindCounter = 0;
 
     for (int y = 1; y < MAP_HEIGHT - 1; ++y) {
         for (int x = 1; x < MAP_WIDTH - 1; ++x) {
@@ -91,7 +92,7 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
                 if (rand() % 100 < 6 && itemCounter < 9) {
                     float px = x * TILE_SIZE + 8.f;
                     float py = y * TILE_SIZE + 8.f;
-                    int r = rand() % 3;
+                    int r = rand() % 4;
 
                     if (r == 0 && heartCounter < 4) {
                         worldItems.emplace_back(ItemType::HEART, px, py, "assets/heart.png");
@@ -103,9 +104,14 @@ void spawnItemsAndTraps(DungeonMap& map, std::vector<Item>& worldItems) {
                         speedCounter++;
                         itemCounter++;
                     }
-                    else if (r == 2 && swordCounter < 2) {
+                    else if (r == 2 && swordCounter < 1 && rand() % 100 < 25) {
                         worldItems.emplace_back(ItemType::SWORD, px, py, "assets/sword.png");
                         swordCounter++;
+                        itemCounter++;
+                    }
+                    else if (r == 3 && mindCounter < 1 && rand() % 100 < 15) {
+                        worldItems.emplace_back(ItemType::MIND, px, py, "assets/mind.png");
+                        mindCounter++;
                         itemCounter++;
                     }
                 }
@@ -599,7 +605,7 @@ int main() {
 
         if (player->getIsAttacking() && player->getBounds().intersects(slime.getBounds()) && !slime.isDead()) {
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
-                slime.takeDamage(25);
+                slime.takeDamage(player->getAttackPower());
 
                 sf::Vector2f slimePush = slime.getPosition() - player->getPosition();
 
@@ -627,7 +633,7 @@ int main() {
             !skeleton.isDead()) {
 
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
-                skeleton.takeDamage(25);
+                skeleton.takeDamage(player->getAttackPower());
 
                 if (!skeleton.isDead()) {
                     sf::Vector2f pushDir = skeleton.getPosition() - player->getPosition();
@@ -665,13 +671,13 @@ int main() {
             !mage.isDead()) {
 
             if (playerAttackClock.getElapsedTime().asSeconds() >= 0.4f) {
-                mage.takeDamage(25);
+                mage.takeDamage(player->getAttackPower());
                 playerAttackClock.restart();
             }
         }
 
         if (!slime.isDead() && player->getBounds().intersects(slime.getBounds())) {
-            player->takeDamage(15);
+            player->takeDamage(5);
         }
 
         if (slime.isDead()) {
@@ -700,7 +706,7 @@ int main() {
                 std::pow(pPos.y - itemPos.y, 2)
             );
 
-            float viewRadius = 5.f * TILE_SIZE;
+            float viewRadius = player->getViewRadius();
 
             if (distToItem <= viewRadius) {
                 worldItems[i].draw(window, player->getPosition());
@@ -716,7 +722,7 @@ int main() {
                 std::pow(pPos.y - slimePos.y, 2)
             );
 
-            float viewRadius = 5.f * TILE_SIZE;
+            float viewRadius = player->getViewRadius();
 
             if (distToSlime <= viewRadius) {
                 slime.draw(window);
@@ -732,7 +738,7 @@ int main() {
                 std::pow(pPos.y - skeletonPos.y, 2)
             );
 
-            float viewRadius = 5.f * TILE_SIZE;
+            float viewRadius = player->getViewRadius();
 
             if (distToSkeleton <= viewRadius) {
                 skeleton.draw(window);
@@ -748,7 +754,7 @@ int main() {
                 std::pow(pPos.y - magePos.y, 2)
             );
 
-            float viewRadius = 5.f * TILE_SIZE;
+            float viewRadius = player->getViewRadius();
 
             if (distToMage <= viewRadius) {
                 mage.draw(window);
@@ -757,14 +763,6 @@ int main() {
 
         player->draw(window);
         player->drawHealthBar(window);
-
-        sf::Text floorText;
-        floorText.setFont(font);
-        floorText.setCharacterSize(14);
-        floorText.setFillColor(sf::Color::White);
-        floorText.setString("Kat: " + std::to_string(currentFloor));
-        floorText.setPosition(650.f, 625.f);
-        window.draw(floorText);
 
         window.display();
     }

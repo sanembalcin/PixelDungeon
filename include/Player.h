@@ -8,7 +8,8 @@
 enum class ItemType {
     HEART,
     SPEED,
-    SWORD
+    SWORD,
+    MIND
 };
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
@@ -27,6 +28,7 @@ protected:
     std::vector<ItemType> inventory;
     int attackPower;
     float damageReduction;
+    float viewRadius;
 
 public:
     Player();
@@ -48,8 +50,10 @@ public:
     void boostAttack(int amount);
     void boostDefense(float amount);
     void addToInventory(ItemType type);
+    float getViewRadius() const;
     int getPotionCount() const;
     int getSwordCount() const;
+    int getAttackPower() const;
     virtual void die();
 };
 

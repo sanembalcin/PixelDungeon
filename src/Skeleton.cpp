@@ -25,8 +25,8 @@ Skeleton::Skeleton(float x, float y) {
     sprite.setPosition(x, y);
 
     speed = 2.4f;
-    health = 120;
-    damage = 25;
+    health = 100;
+    damage = 15;
     dead = false;
     attacking = false;
     flashing = false;

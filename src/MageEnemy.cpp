@@ -25,7 +25,7 @@ MageEnemy::MageEnemy(float x, float y) {
     sprite.setPosition(x, y);
 
     speed = 1.5f;
-    health = 80;
+    health = 150;
     dead = false;
     flashing = false;
 }
